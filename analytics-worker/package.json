@@ -1,0 +1,20 @@
+{
+  "name": "analytics-worker",
+  "version": "1.0.0",
+  "description": "PulsePay analytics worker — Redis Streams consumer + rolling metrics",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "ioredis": "^5.3.2",
+    "pino": "^8.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
