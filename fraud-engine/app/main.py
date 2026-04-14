@@ -1,0 +1,114 @@
+import os
+import time
+import logging
+from contextlib import asynccontextmanager
+
+import redis.asyncio as aioredis
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+
+from app.history import HistoryStore
+from app.models import FraudScore, TransactionRequest
+from app.scorer import score_transaction
+
+# ==============================
+# Logging
+# ==============================
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logger = logging.getLogger("fraud-engine")
+
+# ==============================
+# Prometheus metrics
+# ==============================
+SCORE_COUNTER = Counter("fraud_scores_total", "Total fraud scores by decision", ["decision"])
+SCORE_LATENCY = Histogram("fraud_score_latency_ms", "Scoring latency in ms",
+                          buckets=[1, 5, 10, 25, 50, 100, 200, 500])
+
+# ==============================
+# App lifecycle
+# ==============================
+redis_client: aioredis.Redis = None
+history_store: HistoryStore = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global redis_client, history_store
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+    redis_client = aioredis.from_url(redis_url, decode_responses=False)
+    history_store = HistoryStore(redis_client)
+    logger.info("Connected to Redis at %s", redis_url)
+    yield
+    await redis_client.aclose()
+
+
+app = FastAPI(title="PulsePay Fraud Engine", version="1.0.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ==============================
+# Routes
+# ==============================
+
+@app.post("/score", response_model=FraudScore)
+async def score(req: TransactionRequest):
+    start = time.monotonic()
+
+    try:
+        history = await history_store.get_history(req.card_last4, req.merchant_id)
+    except Exception as e:
+        logger.warning("Redis unavailable, scoring without history: %s", e)
+        from app.models import UserHistory
+        history = UserHistory()
+
+    result = score_transaction(req, history)
+
+    elapsed_ms = int((time.monotonic() - start) * 1000)
+    result.latency_ms = elapsed_ms
+
+    # Record to history async (best-effort, don't fail scoring if this errors)
+    try:
+        await history_store.record_transaction(
+            req.card_last4, req.amount, req.card_country, req.timestamp
+        )
+    except Exception as e:
+        logger.warning("Failed to record transaction history: %s", e)
+
+    # Metrics
+    SCORE_COUNTER.labels(decision=result.decision).inc()
+    SCORE_LATENCY.observe(elapsed_ms)
+
+    logger.info(
+        "Scored txn=%s score=%d decision=%s reasons=%s latency_ms=%d",
+        req.transaction_id, result.score, result.decision, result.reasons, elapsed_ms
+    )
+    return result
+
+
+@app.get("/health")
+async def health():
+    redis_ok = False
+    try:
+        await redis_client.ping()
+        redis_ok = True
+    except Exception:
+        pass
+    return {
+        "status": "ok" if redis_ok else "degraded",
+        "service": "fraud-engine",
+        "redis": "ok" if redis_ok else "unavailable",
+    }
+
+
+@app.get("/metrics")
+async def metrics():
+    data = generate_latest()
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
