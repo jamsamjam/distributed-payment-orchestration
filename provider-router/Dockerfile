@@ -6,6 +6,7 @@ COPY src/ ./src/
 RUN mvn package -DskipTests -q
 
 FROM eclipse-temurin:21-jre-alpine
+RUN apk add --no-cache wget
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
