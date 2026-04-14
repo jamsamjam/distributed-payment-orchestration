@@ -44,8 +44,12 @@ export interface ProviderHealth {
   }
 }
 
-// NEXT_PUBLIC_ vars are empty at build time → relative URLs → Next.js rewrites proxy them
+// API calls go through Next.js rewrite proxy (same origin)
+// SSE connects directly to the gateway to avoid Next.js buffering the stream
 const API_BASE = ''
+const SSE_URL = typeof window !== 'undefined'
+  ? `http://${window.location.hostname}:3000/stream/transactions`
+  : '/stream/transactions'
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -63,7 +67,7 @@ export default function Dashboard() {
     let es: EventSource
 
     const connect = () => {
-      es = new EventSource(`${API_BASE}/stream/transactions`)
+      es = new EventSource(SSE_URL)
       sseRef.current = es
 
       es.onopen = () => setConnected(true)
