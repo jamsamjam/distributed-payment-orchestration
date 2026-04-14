@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TransactionFeed from '@/components/TransactionFeed'
 import MetricsStrip from '@/components/MetricsStrip'
 import ProviderHealthGrid from '@/components/ProviderHealthGrid'
@@ -43,41 +43,26 @@ export interface ProviderHealth {
   }
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
-const SSE_URL = process.env.NEXT_PUBLIC_SSE_URL ?? `${API_URL}/stream/transactions`
+// NEXT_PUBLIC_ vars are empty at build time → relative URLs → Next.js rewrites proxy them
+const API_BASE = ''
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [metrics, setMetrics] = useState<Metrics>({
     tps: 0, approvalRate: 100, fraudFlagRate: 0,
-    p50: 0, p95: 0, p99: 0, revenueByProvider: {}, totalTransactions: 0
+    p50: 0, p95: 0, p99: 0, revenueByProvider: {}, totalTransactions: 0,
   })
   const [providerHealth, setProviderHealth] = useState<ProviderHealth>({})
   const [latencyHistory, setLatencyHistory] = useState<{ ts: string; p50: number; p95: number; p99: number }[]>([])
   const [connected, setConnected] = useState(false)
-
   const sseRef = useRef<EventSource | null>(null)
 
-  // Fetch provider health every 5s
+  // SSE connection for live events + metrics snapshots
   useEffect(() => {
-    const fetchHealth = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/v1/providers/health`)
-        if (res.ok) {
-          const data = await res.json()
-          setProviderHealth(data)
-        }
-      } catch {}
-    }
-    fetchHealth()
-    const interval = setInterval(fetchHealth, 5000)
-    return () => clearInterval(interval)
-  }, [])
+    let es: EventSource
 
-  // SSE connection
-  useEffect(() => {
     const connect = () => {
-      const es = new EventSource(SSE_URL)
+      es = new EventSource(`${API_BASE}/stream/transactions`)
       sseRef.current = es
 
       es.onopen = () => setConnected(true)
@@ -102,41 +87,35 @@ export default function Dashboard() {
               revenueByProvider: p.revenueByProvider ?? {},
               totalTransactions: p.totalTransactions,
             })
-            setLatencyHistory(prev => {
-              const next = [...prev, { ts: event.timestamp, p50: p.p50, p95: p.p95, p99: p.p99 }]
-              return next.slice(-20) // keep last 20 snapshots
-            })
+            setLatencyHistory(prev =>
+              [...prev, { ts: event.timestamp, p50: p.p50, p95: p.p95, p99: p.p99 }].slice(-20)
+            )
             return
           }
 
-          // Transaction events
           if (['SETTLED', 'TRANSACTION_FAILED', 'ROUTED', 'FRAUD_SCORED', 'TRANSACTION_INITIATED'].includes(event.type)) {
             setTransactions(prev => [event, ...prev].slice(0, 100))
           }
         } catch {}
       }
-
-      return es
     }
 
-    const es = connect()
-    return () => es.close()
+    connect()
+    return () => es?.close()
   }, [])
 
-  // Poll provider health from router endpoint
+  // Poll provider health every 3s
   useEffect(() => {
-    const fetchProviderHealth = async () => {
+    const fetchHealth = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/v1/providers/health`,
-          { headers: { 'X-Api-Key': 'dev-api-key-12345' } })
-        if (res.ok) {
-          const data = await res.json()
-          setProviderHealth(data)
-        }
+        const res = await fetch(`${API_BASE}/api/v1/providers/health`, {
+          headers: { 'X-Api-Key': 'dev-api-key-12345' },
+        })
+        if (res.ok) setProviderHealth(await res.json())
       } catch {}
     }
-    fetchProviderHealth()
-    const id = setInterval(fetchProviderHealth, 3000)
+    fetchHealth()
+    const id = setInterval(fetchHealth, 3000)
     return () => clearInterval(id)
   }, [])
 
@@ -144,12 +123,10 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-900 p-4">
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            <span className="text-indigo-400">Pulse</span>Pay
-            <span className="text-slate-400 text-sm ml-3 font-normal">Live Operations</span>
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold text-white tracking-tight">
+          <span className="text-indigo-400">Pulse</span>Pay
+          <span className="text-slate-400 text-sm ml-3 font-normal">Live Operations</span>
+        </h1>
         <div className="flex items-center gap-2">
           <span className={`inline-block w-2 h-2 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
           <span className="text-xs text-slate-400">{connected ? 'Live' : 'Reconnecting...'}</span>
@@ -161,12 +138,9 @@ export default function Dashboard() {
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        {/* Transaction Feed — 2 cols */}
         <div className="lg:col-span-2">
           <TransactionFeed transactions={transactions} />
         </div>
-
-        {/* Provider Health + Failure Injection */}
         <div className="flex flex-col gap-4">
           <ProviderHealthGrid health={providerHealth} />
           <FailureInjector />

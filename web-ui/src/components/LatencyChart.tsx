@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type ChartOptions,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 
@@ -54,7 +55,7 @@ export default function LatencyChart({ history }: Props) {
     ],
   }
 
-  const options = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 300 },
@@ -65,7 +66,11 @@ export default function LatencyChart({ history }: Props) {
       },
       y: {
         grid: { color: 'rgba(100,116,139,0.2)' },
-        ticks: { color: '#94a3b8', font: { size: 10 }, callback: (v: number) => `${v}ms` },
+        ticks: {
+          color: '#94a3b8',
+          font: { size: 10 },
+          callback: (value) => `${value}ms`,
+        },
         min: 0,
       },
     },
@@ -73,11 +78,9 @@ export default function LatencyChart({ history }: Props) {
       legend: {
         labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 },
       },
-      title: {
-        display: false,
-      },
+      title: { display: false },
     },
-  } as const
+  }
 
   return (
     <div className="bg-slate-800 rounded-lg border border-slate-700">
