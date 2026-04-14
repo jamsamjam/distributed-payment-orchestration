@@ -45,5 +45,6 @@ public class Account {
     private Instant updatedAt;
 
     @Version
-    private Long version;
+    @Column(name = "version")
+    private Long version = 0L;
 }
