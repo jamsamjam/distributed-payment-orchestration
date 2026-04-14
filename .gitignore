@@ -1,0 +1,28 @@
+# Build artifacts
+target/
+*.jar
+*.class
+
+# Node
+node_modules/
+.next/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE
+.vscode/
+.idea/
+.metals/
+
+# Env
+.env
+
+# OS
+.DS_Store
+
+# Load test results
+loadtest/results/
