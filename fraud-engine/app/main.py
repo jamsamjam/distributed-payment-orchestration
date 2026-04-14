@@ -62,8 +62,12 @@ app.add_middleware(
 async def score(req: TransactionRequest):
     start = time.monotonic()
 
+    # Record velocity BEFORE scoring so concurrent requests count each other
     try:
-        history = await history_store.get_history(req.card_last4, req.merchant_id)
+        velocity_count = await history_store.record_velocity(
+            req.card_last4, req.transaction_id, req.timestamp
+        )
+        history = await history_store.get_history(req.card_last4, velocity_count)
     except Exception as e:
         logger.warning("Redis unavailable, scoring without history: %s", e)
         from app.models import UserHistory
@@ -74,9 +78,9 @@ async def score(req: TransactionRequest):
     elapsed_ms = int((time.monotonic() - start) * 1000)
     result.latency_ms = elapsed_ms
 
-    # Record to history async (best-effort, don't fail scoring if this errors)
+    # Update profile after scoring (best-effort)
     try:
-        await history_store.record_transaction(
+        await history_store.record_profile(
             req.card_last4, req.amount, req.card_country, req.timestamp
         )
     except Exception as e:
