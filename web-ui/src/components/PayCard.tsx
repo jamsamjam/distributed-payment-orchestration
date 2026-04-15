@@ -15,6 +15,7 @@ const statusColor = (s?: string) =>
 export default function PayCard() {
   const [amount, setAmount] = useState('50.00')
   const [country, setCountry] = useState('US')
+  const [cardLast4, setCardLast4] = useState('4242')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [hovered, setHovered] = useState(false)
@@ -33,7 +34,7 @@ export default function PayCard() {
           amount: parseFloat(amount) || 10,
           currency: 'USD',
           merchantId: 'merchant_demo',
-          cardLast4: '4242',
+          cardLast4: cardLast4.replace(/\s/g, '').slice(-4) || '0000',
           cardCountry: country || 'US',
         }),
       })
@@ -130,9 +131,35 @@ export default function PayCard() {
           </svg>
         </div>
 
-        <p style={{ margin: '0 0 16px', fontSize: '13px', fontWeight: 500, letterSpacing: '0.06em', opacity: 0.88, position: 'relative', zIndex: 1 }}>
+        <p style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 500, letterSpacing: '0.06em', opacity: 0.88, position: 'relative', zIndex: 1 }}>
           Credit Card
         </p>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '14px', position: 'relative', zIndex: 1 }}>
+          <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '15px', fontWeight: 600, letterSpacing: '0.25em', opacity: 0.45 }}>
+            **** **** ****
+          </span>
+          <input
+            type="text"
+            value={cardLast4}
+            onChange={e => setCardLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            maxLength={4}
+            placeholder="0000"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: 'white',
+              caretColor: 'rgba(255,255,255,0.8)',
+              fontSize: '15px',
+              fontWeight: 600,
+              letterSpacing: '0.25em',
+              width: '52px',
+              padding: 0,
+              fontFamily: 'ui-monospace, monospace',
+            }}
+          />
+        </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative', zIndex: 1 }}>
           <div>

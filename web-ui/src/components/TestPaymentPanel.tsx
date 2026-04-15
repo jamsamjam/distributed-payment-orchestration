@@ -143,7 +143,7 @@ export default function TestPaymentPanel() {
           amount: 25.0,
           currency: 'USD',
           merchantId: 'merchant_demo',
-          cardLast4: '4242',
+          cardLast4: '9999',
           cardCountry: 'US',
         }),
       }).then(() => setRapidCount(c => c + 1))
