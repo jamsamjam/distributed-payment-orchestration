@@ -138,18 +138,18 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 
 | Test | VUs | Duration | Requests | TPS | P50 | P95 | Error Rate | Notes |
 |---|---|---|---|---|---|---|---|---|
-| Baseline | 50 | 2 min | 2,330 | **19 TPS** | 1.32 s | 8.33 s | 3.7% [1] | Single machine, steady state |
-| Spike | 0→500 | 2 min | 3,595 | **27 TPS** | 15 s | 15 s | 84.6% [2] | System saturates rapidly; timeouts dominate above ~50 VUs |
+| Baseline | 50 | 2 min | 3,326 | **28 TPS** | 1.01 s | 6.05 s | 2.0% [1] | Single machine, steady state |
+| Spike | 0→500 | 2 min | 16,550 | **138 TPS** | 624 ms | 15 s | 94.0% [2] | Saturates above ~50 VUs; timeouts dominate at peak |
 | Failure injection | 50 | 2 min | 4,920 | **40 TPS** | 705 ms | 4.1 s | 31.5% [3] | Stripe injected at t≈8s, circuit breaker reroutes |
 
-[1] Fraud block rate was 81.6% in the baseline run — the load test's random amounts and country codes trigger amount-deviation and geo signals under the current demo thresholds (block > 54). This is expected and does not reflect real-world traffic; the demo uses controlled card inputs.  
-[2] Spike error rate reflects connection timeouts under 500-VU burst. The routing algorithm now uses weighted-random selection with a per-transaction fallback loop, which adds overhead per request and reduces saturation point compared to the previous single-best-provider selection.  
+[1] Fraud block rate was 38% in the baseline run — the load test's random amounts and country codes accumulate history and trigger amount-deviation signals over time. This is expected; the demo uses controlled card inputs where score is 0 on clean cards.  
+[2] Spike error rate reflects connection timeouts under 500-VU burst. The routing algorithm uses weighted-random selection with a per-transaction fallback loop; saturation point is lower than a simple single-best-provider approach but resilience under partial failure is higher.  
 [3] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus fraud-block rate. After the breaker opened, traffic successfully rerouted to Adyen/Braintree.
 
 > [!Note] Bottleneck analysis
-> Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~19 TPS. In production with:
-- Horizontal orchestrator scaling (3× replicas) → ~57 TPS
-- Async fraud scoring (fire-and-forget) → ~50 TPS per replica
+> Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~28 TPS. In production with:
+- Horizontal orchestrator scaling (3× replicas) → ~84 TPS
+- Async fraud scoring (fire-and-forget) → ~60 TPS per replica
 - Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**
 
 ## Architecture Decision Records
