@@ -151,8 +151,8 @@ services:
       FRAUD_ENGINE_URL: http://fraud-engine:8000
       PROVIDER_ROUTER_URL: http://provider-router:8081
       LEDGER_URL: http://ledger-service:8082
-      FRAUD_BLOCK_THRESHOLD: 80
-      FRAUD_FLAG_THRESHOLD: 50
+      FRAUD_BLOCK_THRESHOLD: 54
+      FRAUD_FLAG_THRESHOLD: 25
     ports:
       - "8080:8080"
     depends_on:

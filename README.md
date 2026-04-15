@@ -2,6 +2,13 @@
 
 A payment orchestration platform: multi-provider routing, ML-based fraud scoring, SAGA-based distributed transaction management, circuit breaker failover, and a live operations dashboard.
 
+<details>
+<summary>Dashboard Preview</summary>
+
+![Dashboard](./docs/dashboard.png)
+
+</details>
+
 ## Architecture
 
 [![Architecture Diagram](./docs/architecture.png)](./docs/architecture.png)
@@ -10,22 +17,11 @@ A payment orchestration platform: multi-provider routing, ML-based fraud scoring
 
 ```bash
 docker compose up --build
+# or docker-compose up --build
 ```
 
-## Services
-
-| Service | Stack | Responsibility |
-|---|---|---|
-| `api-gateway` | Node.js + Fastify | Auth, rate limiting (configurable via `RATE_LIMIT_MAX_TOKENS`), SSE stream |
-| `payment-orchestrator` | Java 21 + Spring Boot | 6-step SAGA, compensation, domain events |
-| `fraud-engine` | Python + FastAPI | ML scoring 0–100, velocity / geo / amount / time signals |
-| `provider-router` | Java 21 + Spring Boot | Weighted routing, per-provider circuit breaker |
-| `ledger-service` | Java 21 + Spring Boot | Double-entry bookkeeping, idempotent reserve/settle |
-| `analytics-worker` | Node.js | Redis Stream consumer, rolling metrics (60s window) |
-| `web-ui` | Next.js 14 + Tailwind | Live ops dashboard, SSE transaction feed |
-| `provider-mock` | Node.js + Fastify | Simulated Stripe / Adyen / Braintree with failure injection |
-
-## API Reference
+<details>
+<summary>API Reference</summary>
 
 ### Initiate Payment
 
@@ -63,6 +59,21 @@ GET /api/v1/payments/:id
 X-Api-Key: dev-api-key-12345
 ```
 
+</details>
+
+## Services
+
+| Service | Stack | Responsibility |
+|---|---|---|
+| `api-gateway` | Node.js + Fastify | Auth, rate limiting (configurable via `RATE_LIMIT_MAX_TOKENS`), SSE stream |
+| `payment-orchestrator` | Java 21 + Spring Boot | 6-step SAGA, compensation, domain events |
+| `fraud-engine` | Python + FastAPI | ML scoring 0–100, velocity / geo / amount / time signals |
+| `provider-router` | Java 21 + Spring Boot | Weighted routing, per-provider circuit breaker |
+| `ledger-service` | Java 21 + Spring Boot | Double-entry bookkeeping, idempotent reserve/settle |
+| `analytics-worker` | Node.js | Redis Stream consumer, rolling metrics (60s window) |
+| `web-ui` | Next.js 14 + Tailwind | Live ops dashboard, SSE transaction feed |
+| `provider-mock` | Node.js + Fastify | Simulated Stripe / Adyen / Braintree with failure injection |
+
 ## Fraud Scoring
 
 Four signals combine for a score 0–100:
@@ -76,13 +87,20 @@ Four signals combine for a score 0–100:
 | GEO_IMPOSSIBLE_TRAVEL | 30 | Different country within 60 minutes |
 | ODD_HOURS | 15 | 2am–5am UTC |
 
-- **Score > 80** → BLOCK (transaction rejected, HTTP 402)
-- **Score > 50** → FLAG (transaction proceeds, flagged in feed)
-- **Score ≤ 50** → ALLOW
+```mermaid
+flowchart LR
+    A["0–25<br/>ALLOW"]:::allow --> 
+    B["26–54<br/>FLAG"]:::flag --> 
+    C["55–100<br/>BLOCK"]:::block
 
-**Demo scenarios** (use the Test Payments panel in the dashboard):
-1. Send "Normal Payment" ($99, US) to establish baseline
-2. Send "Fraud Block" ($9999, JP) — scores GEO(30) + AMOUNT_EXTREME(55) = **85 → BLOCKED**
+    classDef allow fill:#d4edda,stroke:#2e7d32,color:#000;
+    classDef flag fill:#fff3cd,stroke:#f9a825,color:#000;
+    classDef block fill:#f8d7da,stroke:#c62828,color:#000;
+```
+
+> [!Note]
+> The signal weights and thresholds here are demo-tuned, not data-calibrated. In production, these would be derived from labelled historical transactions by sweeping thresholds against a ROC curve and choosing an operating point based on acceptable false-positive rate (legitimate transactions blocked) vs. false-negative rate (fraud let through).
+
 
 ## Circuit Breaker
 
@@ -102,13 +120,17 @@ stateDiagram-v2
 
 ## Idempotency
 
-Every payment requires an `idempotencyKey`. Sending the same key twice returns the original result — no double charge.
+Every payment requires an `idempotencyKey`. Sending the same key twice returns the original result without double charge.
+
+<details>
+<summary>API Example</summary>
 
 ```bash
 # Both calls return the same transactionId
 curl -X POST .../payments -d '{"idempotencyKey":"key-001", ...}'
 curl -X POST .../payments -d '{"idempotencyKey":"key-001", ...}'  # ← same response
 ```
+</details>
 
 ## Load Test Results
 
@@ -123,7 +145,8 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 [1] Spike error rate reflects connection timeouts under 500-VU burst — the system stabilises at ~240 TPS before saturating.  
 [2] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus a small fraud-block rate (~6%). After the breaker opened, traffic successfully rerouted to Adyen/Braintree.
 
-**Bottleneck analysis:** Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~24 TPS. In production with:
+> [!Note] Bottleneck analysis
+> Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~24 TPS. In production with:
 - Horizontal orchestrator scaling (3× replicas) → ~72 TPS
 - Async fraud scoring (fire-and-forget) → ~60 TPS per replica
 - Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**

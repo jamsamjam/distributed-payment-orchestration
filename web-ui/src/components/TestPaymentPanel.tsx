@@ -18,38 +18,65 @@ const SCENARIOS = [
   },
   {
     label: 'Geo Anomaly',
-    description: 'Same card, different country',
+    description: 'US baseline → same card from RU',
     tone: 'yellow',
+    // Seeds a US baseline first so geo travel fires; amount stays similar so
+    // only GEO_IMPOSSIBLE_TRAVEL (30 pts) triggers → FLAG (score > 50 needs
+    // a combined signal, so we bump amount enough for AMOUNT_ANOMALY to fire).
     payload: {
-      amount: 120.0,
+      amount: 350.0,
       currency: 'USD',
       merchantId: 'merchant_demo',
-      cardLast4: '4242',
+      cardLast4: '4243',
       cardCountry: 'RU',
+    },
+    // baseline sent before the real payload
+    baseline: {
+      amount: 99.99,
+      currency: 'USD',
+      merchantId: 'merchant_demo',
+      cardLast4: '4243',
+      cardCountry: 'US',
     },
   },
   {
     label: 'Amount Anomaly',
-    description: '$9999 (deviation from baseline)',
+    description: 'US baseline → 100× amount spike',
     tone: 'orange',
     payload: {
       amount: 9999.99,
       currency: 'USD',
       merchantId: 'merchant_demo',
-      cardLast4: '4242',
+      cardLast4: '4244',
+      cardCountry: 'US',
+    },
+    baseline: {
+      amount: 99.99,
+      currency: 'USD',
+      merchantId: 'merchant_demo',
+      cardLast4: '4244',
       cardCountry: 'US',
     },
   },
   {
     label: 'Fraud Block',
-    description: 'Large amount and geo change',
+    description: 'US baseline → large amount + geo change',
     tone: 'red',
     payload: {
       amount: 9999.99,
       currency: 'USD',
       merchantId: 'merchant_demo',
-      cardLast4: '4242',
+      cardLast4: '4245',
       cardCountry: 'JP',
+    },
+    // Without a US baseline first: no geo signal (last_country=null) and no
+    // amount baseline → score stays 0 → ALLOW. Seeding fixes both signals.
+    baseline: {
+      amount: 99.99,
+      currency: 'USD',
+      merchantId: 'merchant_demo',
+      cardLast4: '4245',
+      cardCountry: 'US',
     },
   },
 ]
@@ -67,18 +94,28 @@ export default function TestPaymentPanel() {
   const [results, setResults] = useState<Record<string, Result>>({})
   const [rapidCount, setRapidCount] = useState(0)
 
-  const send = async (label: string, payload: Record<string, unknown>) => {
+  const post = (payload: Record<string, unknown>, key: string) =>
+    fetch('/api/v1/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'dev-api-key-12345' },
+      body: JSON.stringify({ ...payload, idempotencyKey: key }),
+    }).then(r => r.json())
+
+  const send = async (label: string, payload: Record<string, unknown>, baseline?: Record<string, unknown>) => {
     setLoading(label)
     try {
-      const res = await fetch('/api/v1/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Api-Key': 'dev-api-key-12345',
-        },
-        body: JSON.stringify({ ...payload, idempotencyKey: `ui-${label}-${Date.now()}` }),
-      })
-      const data = await res.json()
+      const ts = Date.now()
+      // Fresh card per click: prevents history pollution where repeated test runs
+      // inflate avg_amount until the anomaly threshold stops firing.
+      const freshCard = String(Math.floor(1000 + Math.random() * 9000))
+      const withCard = (p: Record<string, unknown>) => ({ ...p, cardLast4: freshCard })
+
+      // Send baseline first (establishes avg_amount and last_country in fraud engine)
+      // so that geo-travel and amount-deviation signals fire reliably on the real payload.
+      if (baseline) {
+        await post(withCard(baseline), `ui-baseline-${label}-${ts}`)
+      }
+      const data = await post(withCard(payload), `ui-${label}-${ts}`)
       setResults(prev => ({ ...prev, [label]: data }))
     } catch (e) {
       setResults(prev => ({
@@ -144,11 +181,11 @@ export default function TestPaymentPanel() {
         <div>
           <p className="panel-title">Test payments</p>
         </div>
-        <span className="soft-chip">Card 4242</span>
+        <span className="soft-chip">merchant_demo</span>
       </div>
 
       <div className="control-stack">
-        {SCENARIOS.map(({ label, description, tone, payload }) => {
+        {SCENARIOS.map(({ label, description, tone, payload, baseline }) => {
           const result = results[label]
           const isLoading = loading === label
           const style = toneStyle(tone)
@@ -169,7 +206,7 @@ export default function TestPaymentPanel() {
                 </div>
 
                 <button
-                  onClick={() => send(label, payload)}
+                  onClick={() => send(label, payload, baseline)}
                   disabled={!!loading}
                   className="action-button"
                   style={{
