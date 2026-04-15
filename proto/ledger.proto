@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package pulsepay.ledger;
+
+option java_multiple_files = true;
+option java_package = "com.pulsepay.proto.ledger";
+
+service LedgerService {
+  rpc Reserve (ReserveRequest) returns (LedgerResponse);
+  rpc Settle (SettleRequest) returns (LedgerResponse);
+  rpc ReleaseReservation (ReleaseRequest) returns (LedgerResponse);
+  rpc GetBalance (GetBalanceRequest) returns (BalanceResponse);
+}
+
+message ReserveRequest {
+  string idempotency_key = 1;
+  string account_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string reference_id = 5; // transaction_id
+}
+
+message SettleRequest {
+  string idempotency_key = 1;
+  string account_id = 2;
+  double amount = 3;
+  string reference_id = 4;
+}
+
+message ReleaseRequest {
+  string idempotency_key = 1;
+  string reference_id = 2; // transaction_id
+}
+
+message GetBalanceRequest {
+  string account_id = 1;
+}
+
+message LedgerResponse {
+  bool success = 1;
+  string entry_id = 2;
+  string error_message = 3;
+}
+
+message BalanceResponse {
+  string account_id = 1;
+  double balance = 2;
+  double reserved = 3;
+  double available = 4;
+  string currency = 5;
+}

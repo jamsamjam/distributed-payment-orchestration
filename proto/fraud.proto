@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pulsepay.fraud;
+
+option java_multiple_files = true;
+option java_package = "com.pulsepay.proto.fraud";
+
+import "google/protobuf/timestamp.proto";
+
+service FraudService {
+  rpc ScoreTransaction (FraudRequest) returns (FraudResponse);
+}
+
+message FraudRequest {
+  string transaction_id = 1;
+  double amount = 2;
+  string currency = 3;
+  string merchant_id = 4;
+  string card_last4 = 5;
+  string card_country = 6;
+  google.protobuf.Timestamp timestamp = 7;
+}
+
+message FraudResponse {
+  string transaction_id = 1;
+  int32 score = 2;
+  string decision = 3; // ALLOW, FLAG, BLOCK
+  repeated string reasons = 4;
+  int64 latency_ms = 5;
+}

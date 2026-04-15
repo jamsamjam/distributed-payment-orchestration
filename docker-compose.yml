@@ -1,0 +1,245 @@
+version: "3.9"
+
+services:
+  # ==============================
+  # Infrastructure
+  # ==============================
+  postgres:
+    image: postgres:16-alpine
+    container_name: pulsepay-postgres
+    environment:
+      POSTGRES_DB: pulsepay
+      POSTGRES_USER: pulsepay
+      POSTGRES_PASSWORD: pulsepay
+    volumes:
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulsepay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: pulsepay-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ==============================
+  # Provider Mock (must start first — no DB deps)
+  # ==============================
+  provider-mock:
+    build:
+      context: ./provider-mock
+      dockerfile: Dockerfile
+    container_name: pulsepay-provider-mock
+    environment:
+      PORT: 9000
+      STRIPE_SUCCESS_RATE: 0.98
+      STRIPE_MIN_LATENCY_MS: 80
+      STRIPE_MAX_LATENCY_MS: 200
+      ADYEN_SUCCESS_RATE: 0.96
+      ADYEN_MIN_LATENCY_MS: 100
+      ADYEN_MAX_LATENCY_MS: 300
+      BRAINTREE_SUCCESS_RATE: 0.94
+      BRAINTREE_MIN_LATENCY_MS: 150
+      BRAINTREE_MAX_LATENCY_MS: 400
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ==============================
+  # Ledger Service
+  # ==============================
+  ledger-service:
+    build:
+      context: ./ledger-service
+      dockerfile: Dockerfile
+    container_name: pulsepay-ledger
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pulsepay
+      SPRING_DATASOURCE_USERNAME: pulsepay
+      SPRING_DATASOURCE_PASSWORD: pulsepay
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ==============================
+  # Fraud Engine
+  # ==============================
+  fraud-engine:
+    build:
+      context: ./fraud-engine
+      dockerfile: Dockerfile
+    container_name: pulsepay-fraud
+    environment:
+      PORT: 8000
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ==============================
+  # Provider Router
+  # ==============================
+  provider-router:
+    build:
+      context: ./provider-router
+      dockerfile: Dockerfile
+    container_name: pulsepay-router
+    environment:
+      SERVER_PORT: 8081
+      PROVIDER_MOCK_URL: http://provider-mock:9000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      provider-mock:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ==============================
+  # Payment Orchestrator
+  # ==============================
+  payment-orchestrator:
+    build:
+      context: ./payment-orchestrator
+      dockerfile: Dockerfile
+    container_name: pulsepay-orchestrator
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pulsepay
+      SPRING_DATASOURCE_USERNAME: pulsepay
+      SPRING_DATASOURCE_PASSWORD: pulsepay
+      SERVER_PORT: 8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      FRAUD_ENGINE_URL: http://fraud-engine:8000
+      PROVIDER_ROUTER_URL: http://provider-router:8081
+      LEDGER_URL: http://ledger-service:8082
+      FRAUD_BLOCK_THRESHOLD: 80
+      FRAUD_FLAG_THRESHOLD: 50
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fraud-engine:
+        condition: service_healthy
+      provider-router:
+        condition: service_healthy
+      ledger-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # ==============================
+  # API Gateway
+  # ==============================
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: pulsepay-gateway
+    environment:
+      PORT: 3000
+      ORCHESTRATOR_URL: http://payment-orchestrator:8080
+      REDIS_URL: redis://redis:6379
+      API_KEY: dev-api-key-12345
+      RATE_LIMIT_MAX_TOKENS: 100
+      RATE_LIMIT_REFILL_RATE: 100
+    ports:
+      - "3000:3000"
+    depends_on:
+      payment-orchestrator:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ==============================
+  # Analytics Worker
+  # ==============================
+  analytics-worker:
+    build:
+      context: ./analytics-worker
+      dockerfile: Dockerfile
+    container_name: pulsepay-analytics
+    environment:
+      REDIS_URL: redis://redis:6379
+      METRICS_WINDOW_SECONDS: 60
+      METRICS_PUBLISH_INTERVAL_MS: 5000
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ==============================
+  # Web UI
+  # ==============================
+  web-ui:
+    build:
+      context: ./web-ui
+      dockerfile: Dockerfile
+    container_name: pulsepay-web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_SSE_URL: http://localhost:3000/stream/transactions
+      INTERNAL_API_URL: http://api-gateway:3000
+    ports:
+      - "80:3000"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: pulsepay-network

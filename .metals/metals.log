@@ -1,0 +1,253 @@
+2026.04.14 22:36:46 INFO  Started: Metals version 1.6.7 in folders '/Users/sam/Desktop/!/pulsepay' for client Visual Studio Code 1.115.0.
+2026.04.14 22:36:46 INFO  Memory monitor started
+2026.04.14 22:36:46 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+Apr 14, 2026 11:07:28 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+Apr 14, 2026 11:07:32 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2026.04.15 01:26:40 INFO  Shutting down server
+2026.04.15 01:26:40 INFO  Memory monitor stopped
+2026.04.15 01:26:40 INFO  shutting down Metals
+2026.04.15 01:26:40 INFO  Exiting server
+2026.04.15 04:18:03 INFO  Started: Metals version 1.6.7 in folders '/Users/sam/Desktop/!/pulsepay' for client Visual Studio Code 1.115.0.
+2026.04.15 04:18:03 INFO  Memory monitor started
+2026.04.15 04:18:03 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026.04.15 04:18:08 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java
+2026.04.15 04:21:01 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java. Using fallback presentation compiler.
+Apr 15, 2026 4:22:05 AM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+Apr 15, 2026 4:34:16 AM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2026.04.15 04:34:18 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java
+2026.04.15 04:35:21 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/dto/PaymentRequest.java
+2026.04.15 04:35:30 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/model/Transaction.java
+2026.04.15 04:37:18 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java. Using fallback presentation compiler.
+2026.04.15 04:38:21 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/dto/PaymentRequest.java. Using fallback presentation compiler.
+2026.04.15 04:38:30 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/model/Transaction.java. Using fallback presentation compiler.
+2026.04.15 04:39:28 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/config/JacksonConfig.java
+2026.04.15 04:42:28 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/config/JacksonConfig.java. Using fallback presentation compiler.
+2026.04.15 04:42:59 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java
+2026.04.15 04:43:02 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java. Using fallback presentation compiler.
+2026.04.15 04:43:11 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java
+2026.04.15 04:43:11 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java. Using fallback presentation compiler.
+Apr 15, 2026 4:45:54 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleNotification
+WARNING: Notification threw an exception: {
+  "jsonrpc": "2.0",
+  "method": "metals/didFocusTextDocument",
+  "params": [
+    "git:/Users/sam/Desktop/%21/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java?%7B%22path%22%3A%22%2FUsers%2Fsam%2FDesktop%2F%21%2Fpulsepay%2Fpayment-orchestrator%2Fsrc%2Fmain%2Fjava%2Fcom%2Fpulsepay%2Forchestrator%2Fsaga%2FSagaOrchestrator.java%22%2C%22ref%22%3A%22%22%7D"
+  ]
+}
+java.nio.file.FileSystemNotFoundException: Provider "git" not installed
+	at java.base/java.nio.file.Path.of(Path.java:212)
+	at java.base/java.nio.file.Paths.get(Paths.java:98)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionURIMtags.toAbsolutePath(MtagsEnrichments.scala:149)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionStringMtags.toAbsolutePath(MtagsEnrichments.scala:209)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:787)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:784)
+	at scala.meta.internal.metals.WorkspaceLspService.didFocus(WorkspaceLspService.scala:808)
+	at scala.meta.metals.lsp.DelegatingScalaService.didFocus(DelegatingScalaService.scala:42)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$recursiveFindRpcMethods$0(GenericEndpoint.java:65)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:160)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:225)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:192)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+2026.04.15 04:45:59 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java. Using fallback presentation compiler.
+Apr 15, 2026 4:46:27 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleNotification
+WARNING: Notification threw an exception: {
+  "jsonrpc": "2.0",
+  "method": "metals/didFocusTextDocument",
+  "params": [
+    "git:/Users/sam/Desktop/%21/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java?%7B%22path%22%3A%22%2FUsers%2Fsam%2FDesktop%2F%21%2Fpulsepay%2Fpayment-orchestrator%2Fsrc%2Fmain%2Fjava%2Fcom%2Fpulsepay%2Forchestrator%2Fsaga%2FSagaOrchestrator.java%22%2C%22ref%22%3A%22%22%7D"
+  ]
+}
+java.nio.file.FileSystemNotFoundException: Provider "git" not installed
+	at java.base/java.nio.file.Path.of(Path.java:212)
+	at java.base/java.nio.file.Paths.get(Paths.java:98)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionURIMtags.toAbsolutePath(MtagsEnrichments.scala:149)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionStringMtags.toAbsolutePath(MtagsEnrichments.scala:209)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:787)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:784)
+	at scala.meta.internal.metals.WorkspaceLspService.didFocus(WorkspaceLspService.scala:808)
+	at scala.meta.metals.lsp.DelegatingScalaService.didFocus(DelegatingScalaService.scala:42)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$recursiveFindRpcMethods$0(GenericEndpoint.java:65)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:160)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:225)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:192)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+2026.04.15 04:52:37 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/CircuitBreakerService.java
+2026.04.15 04:52:53 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java
+2026.04.15 04:53:02 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/ProviderClient.java
+Apr 15, 2026 4:54:23 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleNotification
+WARNING: Notification threw an exception: {
+  "jsonrpc": "2.0",
+  "method": "metals/didFocusTextDocument",
+  "params": [
+    "git:/Users/sam/Desktop/%21/pulsepay/payment-orchestrator/src/main/java/com/pulsepay/orchestrator/saga/SagaOrchestrator.java?%7B%22path%22%3A%22%2FUsers%2Fsam%2FDesktop%2F%21%2Fpulsepay%2Fpayment-orchestrator%2Fsrc%2Fmain%2Fjava%2Fcom%2Fpulsepay%2Forchestrator%2Fsaga%2FSagaOrchestrator.java%22%2C%22ref%22%3A%22%22%7D"
+  ]
+}
+java.nio.file.FileSystemNotFoundException: Provider "git" not installed
+	at java.base/java.nio.file.Path.of(Path.java:212)
+	at java.base/java.nio.file.Paths.get(Paths.java:98)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionURIMtags.toAbsolutePath(MtagsEnrichments.scala:149)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionStringMtags.toAbsolutePath(MtagsEnrichments.scala:209)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:787)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:784)
+	at scala.meta.internal.metals.WorkspaceLspService.didFocus(WorkspaceLspService.scala:808)
+	at scala.meta.metals.lsp.DelegatingScalaService.didFocus(DelegatingScalaService.scala:42)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$recursiveFindRpcMethods$0(GenericEndpoint.java:65)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:160)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:225)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:192)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+2026.04.15 04:55:37 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/CircuitBreakerService.java. Using fallback presentation compiler.
+2026.04.15 04:55:53 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java. Using fallback presentation compiler.
+2026.04.15 04:56:02 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/ProviderClient.java. Using fallback presentation compiler.
+2026.04.15 04:56:50 WARN  no build target for: /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java
+2026.04.15 04:56:51 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java. Using fallback presentation compiler.
+2026.04.15 04:59:50 INFO  no build target found for /Users/sam/Desktop/!/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java. Using fallback presentation compiler.
+2026.04.15 05:22:10 INFO  Shutting down server
+2026.04.15 05:22:10 INFO  Memory monitor stopped
+2026.04.15 05:22:10 INFO  shutting down Metals
+2026.04.15 05:22:10 INFO  Exiting server
+2026.04.15 05:49:59 INFO  Started: Metals version 1.6.7 in folders '/Users/sam/Desktop/hehe/pulsepay' for client Visual Studio Code 1.115.0.
+2026.04.15 05:49:59 INFO  Memory monitor started
+2026.04.15 05:50:04 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+Apr 15, 2026 6:16:23 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleNotification
+WARNING: Notification threw an exception: {
+  "jsonrpc": "2.0",
+  "method": "metals/didFocusTextDocument",
+  "params": [
+    "git:/Users/sam/Desktop/hehe/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java?%7B%22path%22%3A%22%2FUsers%2Fsam%2FDesktop%2Fhehe%2Fpulsepay%2Fprovider-router%2Fsrc%2Fmain%2Fjava%2Fcom%2Fpulsepay%2Frouter%2Fservice%2FRoutingService.java%22%2C%22ref%22%3A%22%22%7D"
+  ]
+}
+java.nio.file.FileSystemNotFoundException: Provider "git" not installed
+	at java.base/java.nio.file.Path.of(Path.java:212)
+	at java.base/java.nio.file.Paths.get(Paths.java:98)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionURIMtags.toAbsolutePath(MtagsEnrichments.scala:149)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionStringMtags.toAbsolutePath(MtagsEnrichments.scala:209)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:787)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:784)
+	at scala.meta.internal.metals.WorkspaceLspService.didFocus(WorkspaceLspService.scala:808)
+	at scala.meta.metals.lsp.DelegatingScalaService.didFocus(DelegatingScalaService.scala:42)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$recursiveFindRpcMethods$0(GenericEndpoint.java:65)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:160)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:225)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:192)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+Apr 15, 2026 6:17:22 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleNotification
+WARNING: Notification threw an exception: {
+  "jsonrpc": "2.0",
+  "method": "metals/didFocusTextDocument",
+  "params": [
+    "git:/Users/sam/Desktop/hehe/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java?%7B%22path%22%3A%22%2FUsers%2Fsam%2FDesktop%2Fhehe%2Fpulsepay%2Fprovider-router%2Fsrc%2Fmain%2Fjava%2Fcom%2Fpulsepay%2Frouter%2Fservice%2FRoutingService.java%22%2C%22ref%22%3A%22%22%7D"
+  ]
+}
+java.nio.file.FileSystemNotFoundException: Provider "git" not installed
+	at java.base/java.nio.file.Path.of(Path.java:212)
+	at java.base/java.nio.file.Paths.get(Paths.java:98)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionURIMtags.toAbsolutePath(MtagsEnrichments.scala:149)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionStringMtags.toAbsolutePath(MtagsEnrichments.scala:209)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:787)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:784)
+	at scala.meta.internal.metals.WorkspaceLspService.didFocus(WorkspaceLspService.scala:808)
+	at scala.meta.metals.lsp.DelegatingScalaService.didFocus(DelegatingScalaService.scala:42)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$recursiveFindRpcMethods$0(GenericEndpoint.java:65)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:160)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:225)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:192)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
+Apr 15, 2026 6:17:50 AM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleNotification
+WARNING: Notification threw an exception: {
+  "jsonrpc": "2.0",
+  "method": "metals/didFocusTextDocument",
+  "params": [
+    "git:/Users/sam/Desktop/hehe/pulsepay/provider-router/src/main/java/com/pulsepay/router/service/RoutingService.java?%7B%22path%22%3A%22%2FUsers%2Fsam%2FDesktop%2Fhehe%2Fpulsepay%2Fprovider-router%2Fsrc%2Fmain%2Fjava%2Fcom%2Fpulsepay%2Frouter%2Fservice%2FRoutingService.java%22%2C%22ref%22%3A%22%22%7D"
+  ]
+}
+java.nio.file.FileSystemNotFoundException: Provider "git" not installed
+	at java.base/java.nio.file.Path.of(Path.java:212)
+	at java.base/java.nio.file.Paths.get(Paths.java:98)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionURIMtags.toAbsolutePath(MtagsEnrichments.scala:149)
+	at scala.meta.internal.mtags.MtagsEnrichments$XtensionStringMtags.toAbsolutePath(MtagsEnrichments.scala:209)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:787)
+	at scala.meta.internal.metals.MetalsEnrichments$XtensionString.toAbsolutePath(MetalsEnrichments.scala:784)
+	at scala.meta.internal.metals.WorkspaceLspService.didFocus(WorkspaceLspService.scala:808)
+	at scala.meta.metals.lsp.DelegatingScalaService.didFocus(DelegatingScalaService.scala:42)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.lambda$recursiveFindRpcMethods$0(GenericEndpoint.java:65)
+	at org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.notify(GenericEndpoint.java:160)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.handleNotification(RemoteEndpoint.java:225)
+	at org.eclipse.lsp4j.jsonrpc.RemoteEndpoint.consume(RemoteEndpoint.java:192)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.handleMessage(StreamMessageProducer.java:189)
+	at org.eclipse.lsp4j.jsonrpc.json.StreamMessageProducer.listen(StreamMessageProducer.java:97)
+	at org.eclipse.lsp4j.jsonrpc.json.ConcurrentMessageProcessor.run(ConcurrentMessageProcessor.java:97)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+
