@@ -23,16 +23,16 @@
   --accent-2: #7dc5aa;
   --accent-3: #dff4ea;
 
-  --ok: #4c6c94;
+  --ok: #5da87d;
   --ok-bg: #e5f6ee;
 
   --warn: #C77B41;
   --warn-bg: #fff3df;
 
-  --err: #c45d5d;
+  --err: #d59473;
   --err-bg: #fde9e9;
 
-  --info: #956B88;
+  --info: #4961c2;
   --info-bg: #e8f3f9;
 }
 
@@ -80,7 +80,7 @@ select {
 /* Tab bar inside the right panel */
 .right-tab-bar {
   display: flex;
-  gap: 2px;
+  justify-content: space-around;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
@@ -168,6 +168,12 @@ select {
   animation: dot-pulse 2s ease-in-out infinite;
 }
 
+@keyframes card-ripple {
+  0%   { width: 0;     height: 0;     opacity: 0.88; }
+  65%  { opacity: 0.72; }
+  100% { width: 900px; height: 900px; opacity: 0; }
+}
+
 @keyframes dot-pulse {
   0%, 100% {
     opacity: 1;
@@ -203,17 +209,19 @@ select {
 
 .hero-metric-card {
   padding: 12px 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), var(--bg));
+  background: var(--bg);
   border-color: rgba(79, 159, 120, 0.18);
   border-radius: 16px;
   border: 1px solid transparent;
-  box-shadow: var(--shadow-soft);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
 .metric-label {
   display: block;
   font-size: 10px;
-  color: var(--text-3);
+  color: var(--text-2);
   margin-bottom: 6px;
   letter-spacing: 0.04em;
 }
