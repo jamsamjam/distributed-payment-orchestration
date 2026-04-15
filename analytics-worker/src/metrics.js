@@ -13,9 +13,17 @@ class RollingMetrics {
 
   record(event) {
     const payload = event.payload ?? {};
+    const status = payload.status ?? event.type;
+
+    // Only count terminal events so each transaction is represented once.
+    // Intermediate events (INITIATED, FRAUD_CHECKED, ROUTED) would inflate counts
+    // and make approval rate = 1/4 instead of 1/1 for a settled transaction.
+    if (!['SETTLED', 'BLOCKED', 'FAILED'].includes(status)) return;
+
     this._events.push({
       ts: Date.now(),
-      status: payload.status ?? event.type,
+      status,
+      // fraudDecision is persisted on the transaction and present in terminal events too
       fraudDecision: payload.fraudDecision ?? null,
       provider: payload.provider ?? null,
       amount: parseFloat(payload.amount ?? 0),

@@ -174,7 +174,14 @@ export default function Dashboard() {
               event.type
             )
           ) {
-            setTransactions(prev => [event, ...prev].slice(0, 100))
+            // Merge by transactionId: keep one row per transaction showing its latest
+            // status. Without this, each transaction generates 3-4 events that all
+            // appear as separate rows and the velocity attack (48 events) buries
+            // blocked transactions entirely.
+            setTransactions(prev => {
+              const filtered = prev.filter(t => t.transactionId !== event.transactionId)
+              return [event, ...filtered].slice(0, 100)
+            })
           }
         } catch {}
       }
