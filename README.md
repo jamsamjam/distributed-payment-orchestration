@@ -4,7 +4,7 @@ A payment orchestration platform: multi-provider routing, ML-based fraud scoring
 
 ## Architecture
 
-TBA
+[![Architecture Diagram](./docs/architecture.png)](./docs/architecture.png)
 
 ## Quick Start
 
@@ -88,7 +88,15 @@ Four signals combine for a score 0–100:
 
 Per-provider state machine:
 
-TBA
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED
+
+    CLOSED --> OPEN: 3 consecutive failures
+    OPEN --> HALF_OPEN: after 30s timeout
+    HALF_OPEN --> CLOSED: probe success
+    HALF_OPEN --> OPEN: probe failure
+```
 
 **Demo:** Click "Inject Failure" on adyen in the dashboard → watch traffic automatically reroute to braintree within 1 failed payment. Click "Recover" to restore adyen.
 
