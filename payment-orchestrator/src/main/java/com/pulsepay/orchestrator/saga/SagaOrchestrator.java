@@ -59,6 +59,7 @@ public class SagaOrchestrator {
     private static final String DEMO_ACCOUNT_ID = "a0000000-0000-0000-0000-000000000004";
 
     private final HttpClient http = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
