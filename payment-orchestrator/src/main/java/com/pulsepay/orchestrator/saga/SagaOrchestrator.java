@@ -221,7 +221,7 @@ public class SagaOrchestrator {
 
         // ---- Step 6: NOTIFY ----
         recordStep(txn.getId(), SagaStep.StepName.NOTIFY, SagaStep.StepStatus.COMPLETED, null);
-        eventPublisher.publish("SETTLED", txn, Map.of("providerTxnId", txn.getProviderTxnId()));
+        eventPublisher.publish("SETTLED", txn, Map.of("providerTxnId", txn.getProviderTxnId(), "latencyMs", providerLatencyMs));
 
         log.info("Transaction SETTLED: id={} provider={} amount={} {}",
                 txn.getId(), txn.getProvider(), txn.getAmount(), txn.getCurrency());

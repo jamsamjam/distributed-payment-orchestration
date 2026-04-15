@@ -46,7 +46,7 @@ export default function LatencyChart({ history }: Props) {
       {
         label: 'P95',
         data: history.map(h => h.p95),
-        borderColor: '#7cb9ad',
+        borderColor: '#97e6d6',
         backgroundColor: 'rgba(124, 185, 173, 0.10)',
         tension: 0.35,
         pointRadius: 0,
