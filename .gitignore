@@ -28,3 +28,4 @@ __pycache__/
 loadtest/results/
 
 .claude
+.metals

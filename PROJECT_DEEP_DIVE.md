@@ -96,7 +96,7 @@ final_score = min(total_score, 100)
 
 **High-risk transaction (card testing attack):**
 - 15 transactions in 10 minutes → HIGH_VELOCITY → +30 pts
-- Amount $1.00, baseline $250 → 249× deviation → AMOUNT_ANOMALY_EXTREME → +25 pts
+- Amount $1.00, baseline $250 → 249× deviation → AMOUNT_ANOMALY_EXTREME → +55 pts
 - Different country within 30min → GEO_IMPOSSIBLE_TRAVEL → +30 pts
 - **Score: 85 → BLOCK**
 
