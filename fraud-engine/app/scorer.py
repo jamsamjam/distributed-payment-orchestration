@@ -21,15 +21,15 @@ def score_transaction(txn: TransactionRequest, history: UserHistory) -> FraudSco
         reasons.append("ELEVATED_VELOCITY")
 
     # ------------------------------------------------------------------
-    # Signal 2: Amount deviation from user baseline (weight: 25 pts)
+    # Signal 2: Amount deviation from user baseline (weight: 55 pts)
     # ------------------------------------------------------------------
     if history.avg_amount and history.avg_amount > 0:
         deviation = abs(txn.amount - history.avg_amount) / history.avg_amount
         if deviation > 5.0:
-            score += 25
+            score += 55
             reasons.append("AMOUNT_ANOMALY_EXTREME")
         elif deviation > 2.0:
-            score += 12
+            score += 25
             reasons.append("AMOUNT_ANOMALY")
 
     # ------------------------------------------------------------------
