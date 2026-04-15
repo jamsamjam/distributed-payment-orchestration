@@ -129,7 +129,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white tracking-tight">
-          <span className="text-indigo-400">Pulse</span>Pay
+          <span className="text-neutral-400">Pulse</span>Pay
           <span className="text-slate-400 text-sm ml-3 font-normal">Live Operations</span>
         </h1>
         <div className="flex items-center gap-2">

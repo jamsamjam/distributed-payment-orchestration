@@ -29,7 +29,7 @@ export default function TransactionFeed({ transactions }: Props) {
         <h2 className="text-sm font-semibold text-slate-200">Live Transaction Feed</h2>
         <span className="text-xs text-slate-500">{transactions.length} events</span>
       </div>
-      <div className="overflow-y-auto max-h-[420px] scrollbar-thin">
+      <div className="overflow-y-auto max-h-[640px] scrollbar-thin">
         {transactions.length === 0 ? (
           <p className="text-slate-500 text-sm p-4 text-center">Waiting for transactions...</p>
         ) : (
