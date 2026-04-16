@@ -146,8 +146,8 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 [2] Spike error rate reflects connection timeouts under 500-VU burst. The routing algorithm uses weighted-random selection with a per-transaction fallback loop; saturation point is lower than a simple single-best-provider approach but resilience under partial failure is higher.  
 [3] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus fraud-block rate. After the breaker opened, traffic successfully rerouted to Adyen/Braintree.
 
-> [!Note] Bottleneck analysis
-> Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~28 TPS. In production with:
+> [!Note]
+> **Bottleneck analysis**: Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~28 TPS. In production with:
 > - Horizontal orchestrator scaling (3× replicas) → ~84 TPS
 > - Async fraud scoring (fire-and-forget) → ~60 TPS per replica
 > - Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**
