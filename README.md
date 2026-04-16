@@ -1,6 +1,6 @@
 # PulsePay
 
-A payment orchestration platform: multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1], circuit breaker failover, and a live operations dashboard.
+A payment orchestration platform: multi-provider routing, ML-based fraud scoring, SAGA-based distributed transaction management[^1][^2], circuit breaker failover, and a live operations dashboard.
 
 <details>
 <summary>Dashboard Preview</summary>
@@ -152,12 +152,6 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 > - Async fraud scoring (fire-and-forget) → ~60 TPS per replica
 > - Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**
 
-## Architecture Decision Records
-
-- [ADR-001: SAGA vs Two-Phase Commit](./docs/adr-001-saga-vs-2pc.md)
-- [ADR-002: Redis Streams vs Kafka](./docs/adr-002-redis-streams-vs-kafka.md)
-- [ADR-003: Synchronous vs Asynchronous Fraud Scoring](./docs/adr-003-async-fraud-scoring.md)
-
 ## Scaling Configuration
 
 Key tuning parameters (via environment variables):
@@ -183,3 +177,5 @@ Key tuning parameters (via environment variables):
 If you want to read more, check out: [PROJECT_DEEP_DIVE.md](./PROJECT_DEEP_DIVE.md).
 
 [^1]: González-Aparicio et al. (2023) — [A transaction platform for microservices-based big data systems](https://www.sciencedirect.com/science/article/abs/pii/S1569190X22001782), *Simulation Modelling Practice and Theory*
+
+[^2]: Lemos et al. (2025) — [Local, Global, and Saga Transactions for SOA Services and Microservices](https://ieeexplore.ieee.org/document/10981749), *IEEE Access*
