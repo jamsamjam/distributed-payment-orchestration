@@ -1,6 +1,6 @@
 # PulsePay
 
-A payment orchestration platform: multi-provider routing, ML-based fraud scoring, SAGA-based distributed transaction management, circuit breaker failover, and a live operations dashboard.
+A payment orchestration platform: multi-provider routing, ML-based fraud scoring, SAGA-based distributed transaction management[^1], circuit breaker failover, and a live operations dashboard.
 
 <details>
 <summary>Dashboard Preview</summary>
@@ -148,9 +148,9 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 
 > [!Note] Bottleneck analysis
 > Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~28 TPS. In production with:
-- Horizontal orchestrator scaling (3× replicas) → ~84 TPS
-- Async fraud scoring (fire-and-forget) → ~60 TPS per replica
-- Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**
+> - Horizontal orchestrator scaling (3× replicas) → ~84 TPS
+> - Async fraud scoring (fire-and-forget) → ~60 TPS per replica
+> - Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**
 
 ## Architecture Decision Records
 
@@ -169,3 +169,17 @@ Key tuning parameters (via environment variables):
 | `PROVIDER_CIRCUIT_BREAKER_FAILURE_THRESHOLD` | 3 | Consecutive failures to trip circuit |
 | `PROVIDER_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECONDS` | 30 | Seconds before HALF_OPEN probe |
 | `SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE` | 50 | DB connection pool per orchestrator instance |
+
+## Future Works
+
+**Fraud threshold calibration**: In a real system the thresholds and signal weights would be derived from labelled transaction history using precision/recall analysis, trading off false positive rate (legitimate transactions blocked) against false negative rate (fraud let through).
+
+**Async fraud scoring**: fraud engine is called synchronously in the SAGA, blocking the orchestrator thread for 100–400ms per transaction. Moving to fire-and-forget with a short timeout and a fallback allow-with-flag policy would significantly increase throughput.
+
+**Geo signal improvement**: current geo anomaly is a binary country mismatch within 60 minutes. A real implementation would use haversine distance between coordinates and a velocity threshold (km/h) to distinguish genuine impossible travel from a US→CA hop.
+
+**Horizontal scaling**: the orchestrator is a single instance sharing a Postgres connection pool. Adding replicas requires distributed idempotency key locking (currently in-memory) to prevent duplicate processing under concurrent retries.
+
+If you want to read more, check out: [PROJECT_DEEP_DIVE.md](./PROJECT_DEEP_DIVE.md).
+
+[^1]: González-Aparicio et al. (2023) — [A transaction platform for microservices-based big data systems](https://www.sciencedirect.com/science/article/abs/pii/S1569190X22001782), *Simulation Modelling Practice and Theory*
