@@ -1,6 +1,6 @@
 # PulsePay
 
-A payment orchestration platform: multi-provider routing, ML-based fraud scoring, SAGA-based distributed transaction management[^1][^2], circuit breaker failover, and a live operations dashboard.
+A payment orchestration platform: multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], circuit breaker failover, and a live operations dashboard.
 
 <details>
 <summary>Dashboard Preview</summary>
@@ -67,7 +67,7 @@ X-Api-Key: dev-api-key-12345
 |---|---|---|
 | `api-gateway` | Node.js + Fastify | Auth, rate limiting (configurable via `RATE_LIMIT_MAX_TOKENS`), SSE stream |
 | `payment-orchestrator` | Java 21 + Spring Boot | 6-step SAGA, compensation, domain events |
-| `fraud-engine` | Python + FastAPI | ML scoring 0–100, velocity / geo / amount / time signals |
+| `fraud-engine` | Python + FastAPI | Fraud scoring 0–100, velocity / geo / amount / time signals |
 | `provider-router` | Java 21 + Spring Boot | Weighted routing, per-provider circuit breaker |
 | `ledger-service` | Java 21 + Spring Boot | Double-entry bookkeeping, idempotent reserve/settle |
 | `analytics-worker` | Node.js | Redis Stream consumer, rolling metrics (60s window) |
