@@ -139,7 +139,7 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 | Spike | 0→500 | 2 min | 5,312 | **44 TPS** | 8.89 s | 15 s | 18.3% [2] | Saturates above ~50 VUs; timeout ceiling at 15s |
 | Failure injection | 50 | 2 min | 4,026 | **33.4 TPS** | - | 6.12 s | 4.4% [3] | Stripe injected at t≈30s; circuit breaker reroutes |
 
-[1] Fraud block rate was 38% in the baseline run: the load test's random amounts and country codes accumulate history and trigger amount-deviation signals over time. This is expected as the demo uses controlled card inputs where score is 0 on clean cards.  
+[1] Some errors are fraud blocks; random amounts and country codes accumulate history and trigger amount-deviation signals over time. Expected on demo data (clean cards score 0).  
 [2] Spike error rate reflects connection timeouts under 500-VU burst. The routing algorithm uses weighted-random selection with a per-transaction fallback loop; saturation point is lower than a simple single-best-provider approach but resilience under partial failure is higher.  
 [3] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus fraud-block rate. After the breaker opened, traffic successfully rerouted to Adyen/Braintree.
 
