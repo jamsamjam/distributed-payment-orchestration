@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package pulsepay.router;
+
+option java_multiple_files = true;
+option java_package = "com.pulsepay.proto.router";
+
+service RouterService {
+  rpc Charge (ChargeRequest) returns (ChargeResponse);
+  rpc Void (VoidRequest) returns (VoidResponse);
+}
+
+message ChargeRequest {
+  string transaction_id = 1;
+  double amount = 2;
+  string currency = 3;
+  string merchant_id = 4;
+  string card_last4 = 5;
+  string card_country = 6;
+}
+
+message ChargeResponse {
+  bool success = 1;
+  string provider = 2;
+  string provider_txn_id = 3;
+  string routing_reason = 4;
+  int64 latency_ms = 5;
+  string error_message = 6;
+}
+
+message VoidRequest {
+  string provider = 1;
+  string provider_txn_id = 2;
+}
+
+message VoidResponse {
+  bool success = 1;
+}
