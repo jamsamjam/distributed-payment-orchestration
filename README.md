@@ -63,8 +63,8 @@ X-Api-Key: dev-api-key-12345
 | Service | Stack | Responsibility |
 |---|---|---|
 | `api-gateway` | Node.js + Fastify | Auth, rate limiting (configurable via `RATE_LIMIT_MAX_TOKENS`), SSE stream |
-| `payment-orchestrator` | Java 21 + Spring Boot | 6-step SAGA, compensation, domain events |
-| `fraud-engine` | Python + FastAPI | Fraud scoring 0–100, velocity / geo / amount / time signals |
+| `payment-orchestrator` | Java 21 + Spring Boot | 6-step SAGA, compensation, domain events (gRPC) |
+| `fraud-engine` | Python + FastAPI | Fraud scoring 0-100, velocity / geo / amount / time signals |
 | `provider-router` | Java 21 + Spring Boot | Weighted routing, per-provider circuit breaker |
 | `ledger-service` | Java 21 + Spring Boot | Double-entry bookkeeping, idempotent reserve/settle |
 | `analytics-worker` | Node.js | Redis Stream consumer, rolling metrics (60s window) |
@@ -73,7 +73,7 @@ X-Api-Key: dev-api-key-12345
 
 ## Fraud Scoring
 
-Four signals combine for a score 0–100:
+Four signals combine for a score 0-100:
 
 | Signal | Max Points | Triggers |
 |---|---|---|
@@ -82,13 +82,13 @@ Four signals combine for a score 0–100:
 | AMOUNT_ANOMALY_EXTREME | 55 | >5× deviation from card's average |
 | AMOUNT_ANOMALY | 25 | >2× deviation from card's average |
 | GEO_IMPOSSIBLE_TRAVEL | 30 | Different country within 60 minutes |
-| ODD_HOURS | 15 | 2am–5am UTC |
+| ODD_HOURS | 15 | 2am-5am UTC |
 
 ```mermaid
 flowchart LR
-    A["0–25<br/>ALLOW"]:::allow --> 
-    B["26–54<br/>FLAG"]:::flag --> 
-    C["55–100<br/>BLOCK"]:::block
+    A["0-25<br/>ALLOW"]:::allow --> 
+    B["26-54<br/>FLAG"]:::flag --> 
+    C["55-100<br/>BLOCK"]:::block
 
     classDef allow fill:#d4edda,stroke:#2e7d32,color:#000;
     classDef flag fill:#fff3cd,stroke:#f9a825,color:#000;
@@ -135,19 +135,19 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 
 | Test | VUs | Duration | Requests | TPS | P50 | P95 | Error Rate | Notes |
 |---|---|---|---|---|---|---|---|---|
-| Baseline | 50 | 2 min | 3,326 | **28 TPS** | 1.01 s | 6.05 s | 2.0% [1] | Single machine, steady state |
-| Spike | 0→500 | 2 min | 16,550 | **138 TPS** | 624 ms | 15 s | 94.0% [2] | Saturates above ~50 VUs; timeouts dominate at peak |
-| Failure injection | 50 | 2 min | 4,920 | **40 TPS** | 705 ms | 4.1 s | 31.5% [3] | Stripe injected at t≈8s, circuit breaker reroutes |
+| Baseline | 50 | 2 min | 3,702 | **30.6 TPS** | 631 ms | 7.34 s | 2.9% [1] | Single machine, steady state |
+| Spike | 0→500 | 2 min | 5,312 | **44 TPS** | 8.89 s | 15 s | 18.3% [2] | Saturates above ~50 VUs; timeout ceiling at 15s |
+| Failure injection | 50 | 2 min | 4,026 | **33.4 TPS** | - | 6.12 s | 4.4% [3] | Stripe injected at t≈30s; circuit breaker reroutes |
 
-[1] Fraud block rate was 38% in the baseline run — the load test's random amounts and country codes accumulate history and trigger amount-deviation signals over time. This is expected; the demo uses controlled card inputs where score is 0 on clean cards.  
+[1] Fraud block rate was 38% in the baseline run: the load test's random amounts and country codes accumulate history and trigger amount-deviation signals over time. This is expected as the demo uses controlled card inputs where score is 0 on clean cards.  
 [2] Spike error rate reflects connection timeouts under 500-VU burst. The routing algorithm uses weighted-random selection with a per-transaction fallback loop; saturation point is lower than a simple single-best-provider approach but resilience under partial failure is higher.  
 [3] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus fraud-block rate. After the breaker opened, traffic successfully rerouted to Adyen/Braintree.
 
 > [!Note]
-> **Bottleneck analysis**: Each SAGA transaction holds a DB connection while making 3 synchronous HTTP calls (fraud engine → ledger → provider, each 100–400ms). On one machine with simulated provider latency, this limits throughput to ~28 TPS. In production with:
-> - Horizontal orchestrator scaling (3× replicas) → ~84 TPS
-> - Async fraud scoring (fire-and-forget) → ~60 TPS per replica
-> - Real providers (sub-10ms vs 80–400ms mock) → **~400+ TPS**
+> **Bottleneck analysis**: Each SAGA transaction holds a DB connection while making 4 synchronous gRPC calls (fraud → reserve → route → settle, each 100-400ms). The bottleneck is DB connection pool contention. In production with:
+> - Horizontal orchestrator scaling (3× replicas) → ~90 TPS
+> - Async fraud scoring (fire-and-forget) → ~65 TPS per replica
+> - Real providers (sub-10ms vs 80-400ms mock) → **~400+ TPS**
 
 ## Scaling Configuration
 
@@ -165,7 +165,7 @@ Key tuning parameters (via environment variables):
 
 **Fraud threshold calibration**: In a real system the thresholds and signal weights would be derived from labelled transaction history using precision/recall analysis, trading off false positive rate (legitimate transactions blocked) against false negative rate (fraud let through). This can be further extended to a ML-based fraud scoring model.
 
-**Async fraud scoring**: fraud engine is called synchronously in the SAGA, blocking the orchestrator thread for 100–400ms per transaction. Moving to fire-and-forget with a short timeout and a fallback allow-with-flag policy would significantly increase throughput.
+**Async fraud scoring**: fraud engine is called synchronously in the SAGA, blocking the orchestrator thread for 100-400ms per transaction. Moving to fire-and-forget with a short timeout and a fallback allow-with-flag policy would significantly increase throughput.
 
 **Geo signal improvement**: current geo anomaly is a binary country mismatch within 60 minutes. A real implementation would use haversine distance between coordinates and a velocity threshold (km/h) to distinguish genuine impossible travel from a US→CA hop.
 
