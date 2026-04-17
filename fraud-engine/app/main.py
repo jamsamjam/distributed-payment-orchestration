@@ -14,6 +14,7 @@ from starlette.responses import Response
 from app.history import HistoryStore
 from app.models import FraudScore, TransactionRequest
 from app.scorer import score_transaction
+from app import grpc_server
 
 # ==============================
 # Logging
@@ -42,7 +43,13 @@ async def lifespan(app: FastAPI):
     redis_client = aioredis.from_url(redis_url, decode_responses=False)
     history_store = HistoryStore(redis_client)
     logger.info("Connected to Redis at %s", redis_url)
+
+    grpc_port = int(os.getenv("GRPC_PORT", "50051"))
+    _grpc_server = await grpc_server.serve(grpc_port, history_store)
+
     yield
+
+    await _grpc_server.stop(grace=5)
     await redis_client.aclose()
 
 

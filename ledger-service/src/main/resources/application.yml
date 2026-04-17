@@ -37,6 +37,10 @@ management:
       prometheus:
         enabled: true
 
+grpc:
+  server:
+    port: ${GRPC_PORT:50052}
+
 logging:
   level:
     com.pulsepay: INFO
