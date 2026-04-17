@@ -27,13 +27,17 @@ server:
       max: 200
       min-spare: 20
 
-services:
-  fraud-engine:
-    url: ${FRAUD_ENGINE_URL:http://localhost:8000}
-  provider-router:
-    url: ${PROVIDER_ROUTER_URL:http://localhost:8081}
-  ledger:
-    url: ${LEDGER_URL:http://localhost:8082}
+grpc:
+  client:
+    fraud-engine:
+      address: static://${FRAUD_ENGINE_HOST:localhost}:${FRAUD_ENGINE_GRPC_PORT:50051}
+      negotiation-type: plaintext
+    ledger-service:
+      address: static://${LEDGER_HOST:localhost}:${LEDGER_GRPC_PORT:50052}
+      negotiation-type: plaintext
+    provider-router:
+      address: static://${PROVIDER_ROUTER_HOST:localhost}:${PROVIDER_ROUTER_GRPC_PORT:50053}
+      negotiation-type: plaintext
 
 fraud:
   block-threshold: ${FRAUD_BLOCK_THRESHOLD:80}

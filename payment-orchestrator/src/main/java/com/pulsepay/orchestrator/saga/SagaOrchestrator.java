@@ -1,7 +1,5 @@
 package com.pulsepay.orchestrator.saga;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pulsepay.orchestrator.dto.PaymentRequest;
 import com.pulsepay.orchestrator.dto.PaymentResponse;
 import com.pulsepay.orchestrator.event.DomainEventPublisher;
@@ -9,20 +7,31 @@ import com.pulsepay.orchestrator.model.SagaStep;
 import com.pulsepay.orchestrator.model.Transaction;
 import com.pulsepay.orchestrator.repository.SagaStepRepository;
 import com.pulsepay.orchestrator.repository.TransactionRepository;
+import com.pulsepay.proto.fraud.FraudRequest;
+import com.pulsepay.proto.fraud.FraudResponse;
+import com.pulsepay.proto.fraud.FraudServiceGrpc;
+import com.pulsepay.proto.ledger.LedgerServiceGrpc;
+import com.pulsepay.proto.ledger.ReleaseRequest;
+import com.pulsepay.proto.ledger.ReserveRequest;
+import com.pulsepay.proto.ledger.SettleRequest;
+import com.pulsepay.proto.router.ChargeRequest;
+import com.pulsepay.proto.router.ChargeResponse;
+import com.pulsepay.proto.router.RouterServiceGrpc;
+import com.pulsepay.proto.router.VoidRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,16 +41,15 @@ public class SagaOrchestrator {
     private final TransactionRepository transactionRepo;
     private final SagaStepRepository sagaStepRepo;
     private final DomainEventPublisher eventPublisher;
-    private final ObjectMapper objectMapper;
 
-    @Value("${services.fraud-engine.url}")
-    private String fraudEngineUrl;
+    @GrpcClient("fraud-engine")
+    private FraudServiceGrpc.FraudServiceBlockingStub fraudStub;
 
-    @Value("${services.provider-router.url}")
-    private String providerRouterUrl;
+    @GrpcClient("ledger-service")
+    private LedgerServiceGrpc.LedgerServiceBlockingStub ledgerStub;
 
-    @Value("${services.ledger.url}")
-    private String ledgerUrl;
+    @GrpcClient("provider-router")
+    private RouterServiceGrpc.RouterServiceBlockingStub routerStub;
 
     @Value("${fraud.block-threshold:80}")
     private int fraudBlockThreshold;
@@ -49,24 +57,8 @@ public class SagaOrchestrator {
     @Value("${fraud.flag-threshold:50}")
     private int fraudFlagThreshold;
 
-    @Value("${saga.max-retries:3}")
-    private int maxRetries;
-
-    @Value("${saga.retry-backoff-ms:500}")
-    private long retryBackoffMs;
-
-    // Default merchant account for demo; in prod this would be per-merchant config
     private static final String DEMO_ACCOUNT_ID = "a0000000-0000-0000-0000-000000000004";
 
-    private final HttpClient http = HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_1_1)
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
-
-    /**
-     * Execute the full 6-step SAGA for a payment.
-     * Idempotent: returns existing result if idempotency key is already present.
-     */
     @Transactional
     public PaymentResponse execute(PaymentRequest req) {
         // ---- Step 1: VALIDATE (idempotency check) ----
@@ -92,11 +84,24 @@ public class SagaOrchestrator {
 
         // ---- Step 2: FRAUD_CHECK ----
         try {
-            JsonNode fraudResult = callFraudEngine(txn);
-            int score = fraudResult.path("score").asInt(0);
-            String decision = fraudResult.path("decision").asText("ALLOW");
-            List<String> reasons = new ArrayList<>();
-            fraudResult.path("reasons").forEach(r -> reasons.add(r.asText()));
+            Instant now = Instant.now();
+            FraudRequest fraudReq = FraudRequest.newBuilder()
+                    .setTransactionId(txn.getId().toString())
+                    .setAmount(txn.getAmount().doubleValue())
+                    .setCurrency(txn.getCurrency())
+                    .setMerchantId(txn.getMerchantId())
+                    .setCardLast4(txn.getCardLast4())
+                    .setCardCountry(txn.getCardCountry())
+                    .setTimestamp(com.google.protobuf.Timestamp.newBuilder()
+                            .setSeconds(now.getEpochSecond())
+                            .setNanos(now.getNano())
+                            .build())
+                    .build();
+
+            FraudResponse fraudResp = fraudStub.scoreTransaction(fraudReq);
+            int score = fraudResp.getScore();
+            String decision = fraudResp.getDecision();
+            List<String> reasons = new ArrayList<>(fraudResp.getReasonsList());
 
             txn.setFraudScore(score);
             txn.setFraudDecision(decision);
@@ -117,7 +122,6 @@ public class SagaOrchestrator {
         } catch (Exception e) {
             log.error("Fraud check failed for txn={}: {}", txn.getId(), e.getMessage());
             recordStep(txn.getId(), SagaStep.StepName.FRAUD_CHECK, SagaStep.StepStatus.FAILED, e.getMessage());
-            // Fraud check failure is non-blocking per spec — proceed with score=0
             txn.setFraudScore(0);
             txn.setFraudDecision("ALLOW");
             txn = transactionRepo.save(txn);
@@ -128,16 +132,24 @@ public class SagaOrchestrator {
         String reserveKey = "reserve:" + txn.getId();
         boolean reserved = false;
         try {
-            reserved = callLedgerReserve(reserveKey, accountId, txn.getAmount(), txn.getCurrency(), txn.getId().toString());
+            var reserveResp = ledgerStub.reserve(ReserveRequest.newBuilder()
+                    .setIdempotencyKey(reserveKey)
+                    .setAccountId(accountId)
+                    .setAmount(txn.getAmount().doubleValue())
+                    .setCurrency(txn.getCurrency())
+                    .setReferenceId(txn.getId().toString())
+                    .build());
+
+            reserved = reserveResp.getSuccess();
             if (reserved) {
                 txn.setStatus(Transaction.TransactionStatus.RESERVED);
                 txn = transactionRepo.save(txn);
                 recordStep(txn.getId(), SagaStep.StepName.RESERVE, SagaStep.StepStatus.COMPLETED, null);
             } else {
                 txn.setStatus(Transaction.TransactionStatus.FAILED);
-                txn.setErrorMessage("Insufficient funds");
+                txn.setErrorMessage(reserveResp.getErrorMessage().isBlank() ? "Insufficient funds" : reserveResp.getErrorMessage());
                 txn = transactionRepo.save(txn);
-                recordStep(txn.getId(), SagaStep.StepName.RESERVE, SagaStep.StepStatus.FAILED, "Insufficient funds");
+                recordStep(txn.getId(), SagaStep.StepName.RESERVE, SagaStep.StepStatus.FAILED, txn.getErrorMessage());
                 eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "INSUFFICIENT_FUNDS"));
                 return toResponse(txn);
             }
@@ -151,27 +163,30 @@ public class SagaOrchestrator {
         }
 
         // ---- Step 4: ROUTE ----
-        JsonNode routeResult = null;
         boolean routeSuccess = false;
         long providerLatencyMs = 0;
         try {
-            routeResult = callProviderRouter(txn);
-            routeSuccess = routeResult.path("success").asBoolean(false);
+            ChargeResponse chargeResp = routerStub.charge(ChargeRequest.newBuilder()
+                    .setTransactionId(txn.getId().toString())
+                    .setAmount(txn.getAmount().doubleValue())
+                    .setCurrency(txn.getCurrency())
+                    .setMerchantId(txn.getMerchantId())
+                    .setCardLast4(txn.getCardLast4())
+                    .setCardCountry(txn.getCardCountry())
+                    .build());
 
+            routeSuccess = chargeResp.getSuccess();
             if (routeSuccess) {
-                String provider = routeResult.path("provider").asText();
-                String providerTxnId = routeResult.path("providerTxnId").asText();
-                providerLatencyMs = routeResult.path("latencyMs").asLong(0);
-                txn.setProvider(provider);
-                txn.setProviderTxnId(providerTxnId);
+                providerLatencyMs = chargeResp.getLatencyMs();
+                txn.setProvider(chargeResp.getProvider());
+                txn.setProviderTxnId(chargeResp.getProviderTxnId());
                 txn.setStatus(Transaction.TransactionStatus.ROUTED);
                 txn = transactionRepo.save(txn);
                 recordStep(txn.getId(), SagaStep.StepName.ROUTE, SagaStep.StepStatus.COMPLETED, null);
-                eventPublisher.publish("ROUTED", txn, Map.of("provider", provider));
+                eventPublisher.publish("ROUTED", txn, Map.of("provider", chargeResp.getProvider()));
             } else {
-                // Compensation: release reservation
                 compensateRelease(txn, reserveKey);
-                String errMsg = routeResult.path("errorMessage").asText("Provider routing failed");
+                String errMsg = chargeResp.getErrorMessage().isBlank() ? "Provider routing failed" : chargeResp.getErrorMessage();
                 txn.setStatus(Transaction.TransactionStatus.FAILED);
                 txn.setErrorMessage(errMsg);
                 txn = transactionRepo.save(txn);
@@ -192,13 +207,18 @@ public class SagaOrchestrator {
         // ---- Step 5: SETTLE ----
         try {
             String settleKey = "settle:" + txn.getId();
-            boolean settled = callLedgerSettle(settleKey, accountId, txn.getAmount(), txn.getId().toString());
-            if (settled) {
+            var settleResp = ledgerStub.settle(SettleRequest.newBuilder()
+                    .setIdempotencyKey(settleKey)
+                    .setAccountId(accountId)
+                    .setAmount(txn.getAmount().doubleValue())
+                    .setReferenceId(txn.getId().toString())
+                    .build());
+
+            if (settleResp.getSuccess()) {
                 txn.setStatus(Transaction.TransactionStatus.SETTLED);
                 txn = transactionRepo.save(txn);
                 recordStep(txn.getId(), SagaStep.StepName.SETTLE, SagaStep.StepStatus.COMPLETED, null);
             } else {
-                // Compensation: void provider charge + release reservation
                 compensateVoid(txn);
                 compensateRelease(txn, reserveKey);
                 txn.setStatus(Transaction.TransactionStatus.FAILED);
@@ -229,65 +249,12 @@ public class SagaOrchestrator {
         return toResponse(txn);
     }
 
-    // ==================== Downstream HTTP calls ====================
-
-    private JsonNode callFraudEngine(Transaction txn) throws Exception {
-        Map<String, Object> body = Map.of(
-                "transaction_id", txn.getId().toString(),
-                "amount", txn.getAmount(),
-                "currency", txn.getCurrency(),
-                "merchant_id", txn.getMerchantId(),
-                "card_last4", txn.getCardLast4(),
-                "card_country", txn.getCardCountry(),
-                "timestamp", Instant.now().toString()
-        );
-        return httpPost(fraudEngineUrl + "/score", body);
-    }
-
-    private boolean callLedgerReserve(String idemKey, String accountId, BigDecimal amount,
-                                       String currency, String referenceId) throws Exception {
-        Map<String, Object> body = new HashMap<>();
-        body.put("idempotencyKey", idemKey);
-        body.put("accountId", accountId);
-        body.put("amount", amount);
-        body.put("currency", currency);
-        body.put("referenceId", referenceId);
-        JsonNode result = httpPost(ledgerUrl + "/ledger/reserve", body);
-        return result.path("success").asBoolean(false);
-    }
-
-    private boolean callLedgerSettle(String idemKey, String accountId, BigDecimal amount,
-                                      String referenceId) throws Exception {
-        Map<String, Object> body = new HashMap<>();
-        body.put("idempotencyKey", idemKey);
-        body.put("accountId", accountId);
-        body.put("amount", amount);
-        body.put("referenceId", referenceId);
-        JsonNode result = httpPost(ledgerUrl + "/ledger/settle", body);
-        return result.path("success").asBoolean(false);
-    }
-
-    private JsonNode callProviderRouter(Transaction txn) throws Exception {
-        Map<String, Object> body = new HashMap<>();
-        body.put("transactionId", txn.getId().toString());
-        body.put("amount", txn.getAmount());
-        body.put("currency", txn.getCurrency());
-        body.put("merchantId", txn.getMerchantId());
-        body.put("cardLast4", txn.getCardLast4());
-        body.put("cardCountry", txn.getCardCountry());
-        return httpPost(providerRouterUrl + "/router/charge", body);
-    }
-
-    // ==================== Compensation ====================
-
     private void compensateRelease(Transaction txn, String reserveKey) {
         try {
-            String releaseKey = "release:" + txn.getId();
-            Map<String, Object> body = Map.of(
-                    "idempotencyKey", releaseKey,
-                    "referenceId", txn.getId().toString()
-            );
-            httpPost(ledgerUrl + "/ledger/release", body);
+            ledgerStub.releaseReservation(ReleaseRequest.newBuilder()
+                    .setIdempotencyKey("release:" + txn.getId())
+                    .setReferenceId(txn.getId().toString())
+                    .build());
             recordStep(txn.getId(), SagaStep.StepName.RESERVE, SagaStep.StepStatus.COMPENSATED, "Released");
             log.info("Compensated: released reservation for txn={}", txn.getId());
         } catch (Exception e) {
@@ -298,30 +265,15 @@ public class SagaOrchestrator {
     private void compensateVoid(Transaction txn) {
         if (txn.getProvider() == null || txn.getProviderTxnId() == null) return;
         try {
-            Map<String, Object> body = Map.of(
-                    "provider", txn.getProvider(),
-                    "providerTxnId", txn.getProviderTxnId()
-            );
-            httpPost(providerRouterUrl + "/router/void", body);
+            routerStub.void_(VoidRequest.newBuilder()
+                    .setProvider(txn.getProvider())
+                    .setProviderTxnId(txn.getProviderTxnId())
+                    .build());
             recordStep(txn.getId(), SagaStep.StepName.ROUTE, SagaStep.StepStatus.COMPENSATED, "Voided");
             log.info("Compensated: voided provider charge for txn={}", txn.getId());
         } catch (Exception e) {
             log.error("Compensation (void) failed for txn={}: {}", txn.getId(), e.getMessage());
         }
-    }
-
-    // ==================== Helpers ====================
-
-    private JsonNode httpPost(String url, Map<String, Object> body) throws Exception {
-        String json = objectMapper.writeValueAsString(body);
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .timeout(Duration.ofSeconds(10))
-                .build();
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
-        return objectMapper.readTree(response.body());
     }
 
     private void recordStep(UUID txnId, SagaStep.StepName step, SagaStep.StepStatus status, String errorMsg) {
