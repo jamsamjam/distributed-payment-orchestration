@@ -16,7 +16,7 @@ Two-Phase Commit (2PC) is a distributed coordination protocol where a single coo
 - **Non-blocking**: each step executes its local transaction independently. No distributed lock is held between steps.
 - **Compensating transactions**: instead of rolling back atomically, each step defines an idempotent compensation action (release reservation, void charge).
 - **Resilience**: partial failures are handled gracefully. The SAGA can be retried from any step.
-- **Heterogeneous participants**: works across any HTTP service regardless of technology.
+- **Heterogeneous participants**: works across any service regardless of technology stack or transport (HTTP, gRPC).
 
 ### PulsePay's Choreography vs Orchestration choice
 
@@ -153,31 +153,28 @@ Every state transition in the payment lifecycle publishes a domain event to Redi
 
 ## 6. Performance Analysis
 
-### Baseline (expected)
+### Measured results (single Apple M2 Pro, all services in Docker)
 
-At 50 VUs with 0.1s think time: theoretical TPS = 50 / (avg_latency + 0.1).
+| Test | TPS | P50 | P95 | Error Rate |
+|---|---|---|---|---|
+| Baseline (50 VUs) | 30.6 | 631 ms | 7.34 s | 2.9% |
+| Spike (0→500 VUs) | 44 | 8.89 s | 15 s | 18.3% |
+| Failure injection (50 VUs, Stripe killed) | 33.4 | — | 6.12 s | 4.4% |
 
-With P95 target of 200ms and end-to-end path being:
-- API Gateway: ~1ms
-- Fraud Engine (Redis lookup + scoring): ~5-15ms
-- Provider Router (mock latency 80-200ms): ~140ms mean
-- Ledger (Postgres): ~3-8ms
+### Bottleneck
 
-Expected P95: ~160ms, TPS: ~250.
+The end-to-end path per SAGA transaction:
+- API Gateway → Orchestrator: HTTP
+- Orchestrator → Fraud Engine: gRPC (~5–15ms scoring + Redis)
+- Orchestrator → Ledger (reserve + settle): gRPC (~3–8ms each, Postgres-bound)
+- Orchestrator → Provider Router → Mock Provider: gRPC + HTTP (~80–400ms mock latency)
 
-### Spike test behavior
-
-At 500 VUs the system will hit:
-1. **Rate limiter**: keys exhausted → 429 responses (expected, not failures)
-2. **DB connection pool**: at 20 connections per service × 2 Java services = 40 total, HikariCP will queue excess requests
-3. **Provider mock**: latency stays stable as it's pure CPU, no DB
-
-Expected: approval rate stays >90%, P95 rises to 400-600ms under spike.
+**Binding constraint**: the orchestrator holds a DB connection for the entire SAGA duration while making 4 sequential gRPC calls. At 50 VUs and ~630ms avg latency, ~30 connections are active simultaneously — within HikariCP's pool of 50 but leaving little headroom. Under spike load (500 VUs), the pool saturates and requests queue, driving P50 above 8s.
 
 ### Failure injection behavior
 
 When Stripe is injected with failures:
 1. First 3 failures → Stripe's circuit breaker opens
-2. Subsequent routing decisions skip Stripe → traffic goes to Adyen (96% SR) and Braintree (94% SR)
+2. Subsequent routing skips Stripe → traffic routes to Adyen (96% SR) and Braintree (94% SR)
 3. Weighted blend of remaining providers: ~95% effective success rate
 4. Dashboard shows Stripe circuit state → OPEN in the provider health grid
