@@ -33,8 +33,6 @@ const injectionsDone = new Counter('failure_injections');
 let failureInjected = false;
 
 export default function () {
-  const elapsed = __ENV.ELAPSED_SECS ? parseInt(__ENV.ELAPSED_SECS) : 0;
-
   // Inject stripe failure at ~30s (one VU does it once)
   if (!failureInjected && __VU === 1 && Date.now() % 30000 < 1000) {
     const injectRes = http.post(

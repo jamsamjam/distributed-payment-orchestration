@@ -2,6 +2,7 @@ package com.pulsepay.orchestrator.controller;
 
 import com.pulsepay.orchestrator.dto.PaymentRequest;
 import com.pulsepay.orchestrator.dto.PaymentResponse;
+import com.pulsepay.orchestrator.dto.TransactionMapper;
 import com.pulsepay.orchestrator.model.Transaction;
 import com.pulsepay.orchestrator.repository.TransactionRepository;
 import com.pulsepay.orchestrator.saga.SagaOrchestrator;
@@ -35,23 +36,7 @@ public class PaymentController {
     @GetMapping("/payments/{id}")
     public ResponseEntity<PaymentResponse> getTransaction(@PathVariable String id) {
         return transactionRepository.findById(UUID.fromString(id))
-                .map(txn -> ResponseEntity.ok(toResponse(txn)))
+                .map(txn -> ResponseEntity.ok(TransactionMapper.toResponse(txn)))
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    private PaymentResponse toResponse(Transaction txn) {
-        return PaymentResponse.builder()
-                .transactionId(txn.getId().toString())
-                .status(txn.getStatus().name())
-                .provider(txn.getProvider())
-                .providerTxnId(txn.getProviderTxnId())
-                .amount(txn.getAmount())
-                .currency(txn.getCurrency())
-                .fraudScore(txn.getFraudScore())
-                .fraudDecision(txn.getFraudDecision())
-                .fraudReasons(txn.getFraudReasons() != null ? java.util.Arrays.asList(txn.getFraudReasons()) : java.util.List.of())
-                .errorMessage(txn.getErrorMessage())
-                .createdAt(txn.getCreatedAt())
-                .build();
     }
 }

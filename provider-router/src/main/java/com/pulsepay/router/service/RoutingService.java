@@ -1,13 +1,16 @@
 package com.pulsepay.router.service;
 
+import com.pulsepay.router.model.CircuitBreakerState;
 import com.pulsepay.router.model.ProviderStats;
 import com.pulsepay.router.model.RouteRequest;
 import com.pulsepay.router.model.RouteResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -15,19 +18,23 @@ import java.util.*;
 @Slf4j
 public class RoutingService {
 
-    private final CircuitBreakerService circuitBreaker;
     private final ProviderClient providerClient;
+
+    @Value("${provider.circuit-breaker.failure-threshold:3}")
+    private int failureThreshold;
+
+    @Value("${provider.circuit-breaker.recovery-timeout-seconds:30}")
+    private int recoveryTimeoutSeconds;
 
     private static final Random RANDOM = new Random();
 
-    // Provider registry — keyed by name
     private final Map<String, ProviderStats> providers = new LinkedHashMap<>();
 
     @PostConstruct
     public void init() {
-        providers.put("stripe",    new ProviderStats("stripe",    0.029, 80,  200));
-        providers.put("adyen",     new ProviderStats("adyen",     0.025, 100, 300));
-        providers.put("braintree", new ProviderStats("braintree", 0.027, 150, 400));
+        providers.put("stripe",    new ProviderStats("stripe",    0.029));
+        providers.put("adyen",     new ProviderStats("adyen",     0.025));
+        providers.put("braintree", new ProviderStats("braintree", 0.027));
     }
 
     /**
@@ -44,19 +51,18 @@ public class RoutingService {
         double maxLatencyInverse = providers.values().stream()
                 .mapToDouble(p -> 1.0 / Math.max(p.getAvgLatencyMs(), 1)).max().orElse(1.0);
 
-        // Build eligible candidate list with scores, sorted best-first
         List<String> skipped = new ArrayList<>();
         List<Map.Entry<ProviderStats, Double>> candidates = new ArrayList<>();
 
         for (ProviderStats stats : providers.values()) {
-            if (!circuitBreaker.canRoute(stats)) {
+            if (!canRoute(stats)) {
                 skipped.add(stats.getName() + "(" + stats.getCircuitState() + ")");
                 continue;
             }
             double score = providerScore(stats, maxCostInverse, maxLatencyInverse);
             candidates.add(Map.entry(stats, score));
         }
-        candidates.sort((a, b) -> Double.compare(b.getValue(), a.getValue())); // best first
+        candidates.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
 
         if (candidates.isEmpty()) {
             log.error("All providers unavailable. Skipped: {}", skipped);
@@ -66,10 +72,7 @@ public class RoutingService {
                     .build();
         }
 
-        // Weighted-random first pick: distributes traffic proportionally to score.
-        // Remaining providers are tried in score order if the first one fails.
         int firstIdx = weightedRandomIndex(candidates);
-        // Rotate list so the randomly chosen provider is first
         Collections.rotate(candidates, -firstIdx);
 
         for (int attempt = 0; attempt < candidates.size(); attempt++) {
@@ -87,12 +90,12 @@ public class RoutingService {
                 result = providerClient.charge(selected.getName(), req);
             } catch (Exception e) {
                 log.error("Unexpected error charging provider {}: {}", selected.getName(), e.getMessage());
-                circuitBreaker.onFailure(selected, 0);
-                continue; // try next
+                onFailure(selected, 0);
+                continue;
             }
 
             if (result.success()) {
-                circuitBreaker.onSuccess(selected, result.latencyMs());
+                onSuccess(selected, result.latencyMs());
                 return RouteResponse.builder()
                         .success(true)
                         .provider(selected.getName())
@@ -101,10 +104,9 @@ public class RoutingService {
                         .latencyMs(result.latencyMs())
                         .build();
             } else {
-                circuitBreaker.onFailure(selected, result.latencyMs());
+                onFailure(selected, result.latencyMs());
                 log.warn("Provider {} failed for txn={}: {} — trying fallback",
                         selected.getName(), req.getTransactionId(), result.errorCode());
-                // loop continues: attempt next provider
             }
         }
 
@@ -115,13 +117,60 @@ public class RoutingService {
                 .build();
     }
 
+    private boolean canRoute(ProviderStats stats) {
+        return switch (stats.getCircuitState()) {
+            case CLOSED -> true;
+            case OPEN -> {
+                if (stats.getOpenedAt() != null &&
+                        Instant.now().isAfter(stats.getOpenedAt().plusSeconds(recoveryTimeoutSeconds))) {
+                    if (!stats.isHalfOpenProbeInFlight()) {
+                        log.info("Circuit breaker HALF_OPEN for provider={}", stats.getName());
+                        stats.setCircuitState(CircuitBreakerState.HALF_OPEN);
+                        stats.setHalfOpenProbeInFlight(true);
+                        yield true;
+                    }
+                }
+                yield false;
+            }
+            case HALF_OPEN -> !stats.isHalfOpenProbeInFlight();
+        };
+    }
+
+    private void onSuccess(ProviderStats stats, long latencyMs) {
+        stats.recordSuccess(latencyMs);
+        if (stats.getCircuitState() == CircuitBreakerState.HALF_OPEN) {
+            log.info("Circuit breaker CLOSED for provider={} (probe succeeded)", stats.getName());
+            stats.setCircuitState(CircuitBreakerState.CLOSED);
+            stats.setHalfOpenProbeInFlight(false);
+        }
+    }
+
+    private void onFailure(ProviderStats stats, long latencyMs) {
+        stats.recordFailure(latencyMs);
+
+        if (stats.getCircuitState() == CircuitBreakerState.HALF_OPEN) {
+            log.warn("Circuit breaker re-OPEN for provider={} (probe failed)", stats.getName());
+            stats.setCircuitState(CircuitBreakerState.OPEN);
+            stats.setOpenedAt(Instant.now());
+            stats.setHalfOpenProbeInFlight(false);
+            return;
+        }
+
+        if (stats.getCircuitState() == CircuitBreakerState.CLOSED &&
+                stats.getConsecutiveFailures().get() >= failureThreshold) {
+            log.warn("Circuit breaker OPEN for provider={} after {} consecutive failures",
+                    stats.getName(), stats.getConsecutiveFailures().get());
+            stats.setCircuitState(CircuitBreakerState.OPEN);
+            stats.setOpenedAt(Instant.now());
+        }
+    }
+
     private double providerScore(ProviderStats stats, double maxCostInverse, double maxLatencyInverse) {
         double costScore = (1.0 / stats.getCost()) / maxCostInverse;
         double latencyScore = (1.0 / Math.max(stats.getAvgLatencyMs(), 1)) / maxLatencyInverse;
         return (stats.getSuccessRate() * 0.5) + (costScore * 0.3) + (latencyScore * 0.2);
     }
 
-    /** Weighted random index: probability of picking i ∝ score[i]. */
     private int weightedRandomIndex(List<Map.Entry<ProviderStats, Double>> candidates) {
         double total = candidates.stream().mapToDouble(Map.Entry::getValue).sum();
         double r = RANDOM.nextDouble() * total;

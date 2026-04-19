@@ -2,6 +2,7 @@ package com.pulsepay.orchestrator.saga;
 
 import com.pulsepay.orchestrator.dto.PaymentRequest;
 import com.pulsepay.orchestrator.dto.PaymentResponse;
+import com.pulsepay.orchestrator.dto.TransactionMapper;
 import com.pulsepay.orchestrator.event.DomainEventPublisher;
 import com.pulsepay.orchestrator.model.SagaStep;
 import com.pulsepay.orchestrator.model.Transaction;
@@ -27,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,7 +65,7 @@ public class SagaOrchestrator {
         Optional<Transaction> existing = transactionRepo.findByIdempotencyKey(req.getIdempotencyKey());
         if (existing.isPresent()) {
             log.info("Idempotent return for key={}", req.getIdempotencyKey());
-            return toResponse(existing.get());
+            return TransactionMapper.toResponse(existing.get());
         }
 
         Transaction txn = Transaction.builder()
@@ -117,7 +117,7 @@ public class SagaOrchestrator {
                 txn.setErrorMessage("Blocked by fraud engine: score=" + score);
                 txn = transactionRepo.save(txn);
                 eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "FRAUD_BLOCKED"));
-                return toResponse(txn);
+                return TransactionMapper.toResponse(txn);
             }
         } catch (Exception e) {
             log.error("Fraud check failed for txn={}: {}", txn.getId(), e.getMessage());
@@ -151,7 +151,7 @@ public class SagaOrchestrator {
                 txn = transactionRepo.save(txn);
                 recordStep(txn.getId(), SagaStep.StepName.RESERVE, SagaStep.StepStatus.FAILED, txn.getErrorMessage());
                 eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "INSUFFICIENT_FUNDS"));
-                return toResponse(txn);
+                return TransactionMapper.toResponse(txn);
             }
         } catch (Exception e) {
             log.error("Reserve failed for txn={}: {}", txn.getId(), e.getMessage());
@@ -159,7 +159,7 @@ public class SagaOrchestrator {
             txn.setErrorMessage("Ledger reserve error: " + e.getMessage());
             txn = transactionRepo.save(txn);
             eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "LEDGER_ERROR"));
-            return toResponse(txn);
+            return TransactionMapper.toResponse(txn);
         }
 
         // ---- Step 4: ROUTE ----
@@ -192,7 +192,7 @@ public class SagaOrchestrator {
                 txn = transactionRepo.save(txn);
                 recordStep(txn.getId(), SagaStep.StepName.ROUTE, SagaStep.StepStatus.FAILED, errMsg);
                 eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "ROUTE_FAILED"));
-                return toResponse(txn);
+                return TransactionMapper.toResponse(txn);
             }
         } catch (Exception e) {
             log.error("Routing failed for txn={}: {}", txn.getId(), e.getMessage());
@@ -201,7 +201,7 @@ public class SagaOrchestrator {
             txn.setErrorMessage("Routing error: " + e.getMessage());
             txn = transactionRepo.save(txn);
             eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "ROUTING_ERROR"));
-            return toResponse(txn);
+            return TransactionMapper.toResponse(txn);
         }
 
         // ---- Step 5: SETTLE ----
@@ -226,7 +226,7 @@ public class SagaOrchestrator {
                 txn = transactionRepo.save(txn);
                 recordStep(txn.getId(), SagaStep.StepName.SETTLE, SagaStep.StepStatus.COMPENSATED, "Settlement failed");
                 eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "SETTLE_FAILED"));
-                return toResponse(txn);
+                return TransactionMapper.toResponse(txn);
             }
         } catch (Exception e) {
             log.error("Settle failed for txn={}: {}", txn.getId(), e.getMessage());
@@ -236,7 +236,7 @@ public class SagaOrchestrator {
             txn.setErrorMessage("Settlement error: " + e.getMessage());
             txn = transactionRepo.save(txn);
             eventPublisher.publish("TRANSACTION_FAILED", txn, Map.of("reason", "SETTLE_ERROR"));
-            return toResponse(txn);
+            return TransactionMapper.toResponse(txn);
         }
 
         // ---- Step 6: NOTIFY ----
@@ -246,7 +246,7 @@ public class SagaOrchestrator {
         log.info("Transaction SETTLED: id={} provider={} amount={} {}",
                 txn.getId(), txn.getProvider(), txn.getAmount(), txn.getCurrency());
 
-        return toResponse(txn);
+        return TransactionMapper.toResponse(txn);
     }
 
     private void compensateRelease(Transaction txn, String reserveKey) {
@@ -285,19 +285,4 @@ public class SagaOrchestrator {
                 .build());
     }
 
-    private PaymentResponse toResponse(Transaction txn) {
-        return PaymentResponse.builder()
-                .transactionId(txn.getId().toString())
-                .status(txn.getStatus().name())
-                .provider(txn.getProvider())
-                .providerTxnId(txn.getProviderTxnId())
-                .amount(txn.getAmount())
-                .currency(txn.getCurrency())
-                .fraudScore(txn.getFraudScore())
-                .fraudDecision(txn.getFraudDecision())
-                .fraudReasons(txn.getFraudReasons() != null ? Arrays.asList(txn.getFraudReasons()) : List.of())
-                .errorMessage(txn.getErrorMessage())
-                .createdAt(txn.getCreatedAt())
-                .build();
-    }
 }

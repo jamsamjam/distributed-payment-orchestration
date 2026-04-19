@@ -9,9 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Data
 public class ProviderStats {
     private final String name;
-    private final double cost;                          // as fraction, e.g. 0.029
-    private final int minLatencyMs;
-    private final int maxLatencyMs;
+    private final double cost;
 
     private final AtomicLong totalRequests = new AtomicLong(0);
     private final AtomicLong successCount = new AtomicLong(0);
@@ -30,7 +28,7 @@ public class ProviderStats {
 
     public double getAvgLatencyMs() {
         long total = totalRequests.get();
-        return total == 0 ? (minLatencyMs + maxLatencyMs) / 2.0 : (double) totalLatencyMs.get() / total;
+        return total == 0 ? 0.0 : (double) totalLatencyMs.get() / total;
     }
 
     public void recordSuccess(long latencyMs) {
