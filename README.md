@@ -60,12 +60,12 @@ X-Api-Key: dev-api-key-12345
 | Service | Stack | Responsibility |
 |---|---|---|
 | `api-gateway` | Node.js + Fastify | Auth, rate limiting (configurable via `RATE_LIMIT_MAX_TOKENS`), SSE stream |
-| `payment-orchestrator` | Java 21 + Spring Boot | 6-step SAGA, compensation, domain events (gRPC) |
+| `payment-orchestrator` | Java 21 + Spring Boot |  SAGA, compensation, domain events (gRPC) |
 | `fraud-engine` | Python + FastAPI | Fraud scoring 0-100, velocity / geo / amount / time signals |
 | `provider-router` | Java 21 + Spring Boot | Weighted routing, per-provider circuit breaker |
 | `ledger-service` | Java 21 + Spring Boot | Double-entry bookkeeping, idempotent reserve/settle |
 | `analytics-worker` | Node.js | Redis Stream consumer, rolling metrics (60s window) |
-| `web-ui` | Next.js 14 + Tailwind | Live ops dashboard, SSE transaction feed |
+| `notification-service` | Node.js + Fastify | Redis Stream consumer, payment notifications, audit log |
 | `provider-mock` | Node.js + Fastify | Simulated Stripe / Adyen / Braintree with failure injection |
 
 ## Fraud Scoring
@@ -83,9 +83,9 @@ Four signals combine for a score 0-100:
 
 ```mermaid
 flowchart LR
-    A["0-25<br/>ALLOW"]:::allow --> 
-    B["26-54<br/>FLAG"]:::flag --> 
-    C["55-100<br/>BLOCK"]:::block
+    A["0-50<br/>ALLOW"]:::allow --> 
+    B["51-80<br/>FLAG"]:::flag --> 
+    C["81-100<br/>BLOCK"]:::block
 
     classDef allow fill:#d4edda,stroke:#2e7d32,color:#000;
     classDef flag fill:#fff3cd,stroke:#f9a825,color:#000;
