@@ -30,9 +30,6 @@ public class SagaStep {
     @Column(name = "status", nullable = false, length = 16)
     private StepStatus status;
 
-    @Column(name = "attempt")
-    private int attempt = 1;
-
     @Column(name = "error_message")
     private String errorMessage;
 

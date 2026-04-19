@@ -1,13 +1,9 @@
-# PulsePay
+# Distributed Payment Orchestration
 
-A payment orchestration platform: multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], circuit breaker failover, and a live operations dashboard.
+>[!Note]
+> This is continuation of the project submitted to Tech Builders Program. For the original submission, see [this](https://github.com/jamsamjam/pulsepay).
 
-<details>
-<summary>Dashboard Preview</summary>
-
-![Dashboard](./docs/dashboard.png)
-
-</details>
+A payment orchestration platform featuring multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], and circuit breaker failover.
 
 ## Architecture
 
@@ -17,7 +13,6 @@ A payment orchestration platform: multi-provider routing, rule-based fraud scori
 
 ```bash
 docker compose up --build
-# or docker-compose up --build
 ```
 
 ## API Reference

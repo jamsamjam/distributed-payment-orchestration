@@ -9,6 +9,5 @@ import java.util.UUID;
 
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> {
     Optional<LedgerEntry> findByIdempotencyKey(String idempotencyKey);
-    List<LedgerEntry> findByAccountIdOrderByCreatedAtDesc(UUID accountId);
     List<LedgerEntry> findByReferenceId(UUID referenceId);
 }

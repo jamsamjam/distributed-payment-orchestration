@@ -41,6 +41,6 @@ public class LedgerEntry {
     private Instant createdAt;
 
     public enum EntryType {
-        RESERVE, SETTLE, RELEASE, DEBIT, CREDIT
+        RESERVE, SETTLE, RELEASE
     }
 }

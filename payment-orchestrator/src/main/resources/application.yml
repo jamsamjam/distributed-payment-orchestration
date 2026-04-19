@@ -43,10 +43,6 @@ fraud:
   block-threshold: ${FRAUD_BLOCK_THRESHOLD:80}
   flag-threshold: ${FRAUD_FLAG_THRESHOLD:50}
 
-saga:
-  max-retries: 3
-  retry-backoff-ms: 500
-
 management:
   endpoints:
     web:

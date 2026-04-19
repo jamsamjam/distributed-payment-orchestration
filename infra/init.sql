@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS saga_steps (
   transaction_id UUID REFERENCES transactions(id),
   step VARCHAR(32) NOT NULL,
   status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
-  attempt INTEGER DEFAULT 1,
   error_message TEXT,
   executed_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -52,7 +51,6 @@ CREATE TABLE IF NOT EXISTS accounts (
   currency VARCHAR(3) NOT NULL,
   balance DECIMAL(12,2) NOT NULL DEFAULT 0,
   reserved DECIMAL(12,2) NOT NULL DEFAULT 0,
-  version BIGINT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT positive_balance CHECK (balance >= 0),
@@ -66,7 +64,6 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   type VARCHAR(32) NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
   reference_id UUID,
-  metadata JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
