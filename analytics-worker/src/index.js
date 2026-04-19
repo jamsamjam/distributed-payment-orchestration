@@ -7,7 +7,7 @@ const { RollingMetrics } = require('./metrics');
 const log = pino({ level: 'info' });
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
-const STREAM_KEY = 'pulsepay:events';
+const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'pulsepay:events';
 const STREAM_GROUP = 'analytics';
 const CONSUMER_NAME = `analytics-${process.pid}`;
 const WINDOW_SECONDS = parseInt(process.env.METRICS_WINDOW_SECONDS ?? '60');

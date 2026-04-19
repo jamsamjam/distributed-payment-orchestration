@@ -16,7 +16,7 @@ const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const API_KEY = process.env.API_KEY ?? 'dev-api-key-12345';
 const MAX_TOKENS = parseInt(process.env.RATE_LIMIT_MAX_TOKENS ?? '100');
 const REFILL_RATE = parseInt(process.env.RATE_LIMIT_REFILL_RATE ?? '100');
-const STREAM_KEY = 'pulsepay:events';
+const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'pulsepay:events';
 const STREAM_GROUP = 'gateway-sse';
 const CONSUMER_NAME = `gateway-${process.pid}`;
 
@@ -267,6 +267,7 @@ async function pollStream() {
           for (const [id, fields] of messages) {
             const dataIdx = fields.indexOf('data');
             if (dataIdx !== -1 && fields[dataIdx + 1]) {
+              // TODO: use correct stream key per message
               try {
                 const event = JSON.parse(fields[dataIdx + 1]);
                 sseManager.broadcast(event);

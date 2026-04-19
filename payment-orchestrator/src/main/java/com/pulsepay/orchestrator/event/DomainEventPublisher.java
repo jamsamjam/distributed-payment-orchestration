@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pulsepay.orchestrator.model.Transaction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -18,7 +18,8 @@ import java.util.UUID;
 @Slf4j
 public class DomainEventPublisher {
 
-    private static final String STREAM_KEY = "pulsepay:events";
+    @Value("${redis.stream.events-key:pulsepay:events}")
+    private String streamKey;
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -48,7 +49,7 @@ public class DomainEventPublisher {
 
             // Publish to Redis Stream
             redisTemplate.opsForStream().add(
-                    STREAM_KEY,
+                    streamKey,
                     Map.of("data", json)
             );
 
