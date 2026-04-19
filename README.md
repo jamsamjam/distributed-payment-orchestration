@@ -1,9 +1,11 @@
 # Distributed Payment Orchestration
 
 >[!Note]
-> This is continuation of the project submitted to Tech Builders Program. For the original submission, see [this](https://github.com/jamsamjam/pulsepay).
+> This repository is a continuation of a previously submitted version of the project. The original submission for evluation is available [here](https://github.com/jamsamjam/pulsepay).
 
 A payment orchestration platform featuring multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], and circuit breaker failover.
+
+The reasoning behind the main design choices is detailed in [PROJECT_DEEP_DIVE.md](./PROJECT_DEEP_DIVE.md). See that document for a deeper explanation of the architecture and trade-offs.
 
 ## Architecture
 
@@ -165,8 +167,6 @@ Key tuning parameters (via environment variables):
 **Geo signal improvement**: current geo anomaly is a binary country mismatch within 60 minutes. A real implementation would use haversine distance between coordinates and a velocity threshold (km/h) to distinguish genuine impossible travel from a US→CA hop.
 
 **Horizontal scaling**: the orchestrator is a single instance sharing a Postgres connection pool. Adding replicas requires distributed idempotency key locking (currently in-memory) to prevent duplicate processing under concurrent retries.
-
-If you want to read more, check out: [PROJECT_DEEP_DIVE.md](./PROJECT_DEEP_DIVE.md).
 
 [^1]: González-Aparicio et al. (2023) — [A transaction platform for microservices-based big data systems](https://www.sciencedirect.com/science/article/abs/pii/S1569190X22001782), *Simulation Modelling Practice and Theory*
 
