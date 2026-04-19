@@ -5,11 +5,11 @@
 
 A payment orchestration platform featuring multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], and circuit breaker failover.
 
-The reasoning behind the main design choices is detailed in [ARCHITECTURE.md](./ARCHITECTURE.md). See that document for a deeper explanation of the architecture and trade-offs.
-
 ## Architecture
 
 [![Architecture Diagram](./docs/architecture.png)](./docs/architecture.png)
+
+The reasoning behind the main design choices is detailed in [ARCHITECTURE.md](./ARCHITECTURE.md). See that document for a deeper explanation of the architecture and trade-offs.
 
 ## Quick Start
 

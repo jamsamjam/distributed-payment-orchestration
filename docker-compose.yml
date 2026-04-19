@@ -2,11 +2,29 @@ services:
   # ==============================
   # Infrastructure
   # ==============================
+  postgres-orchestrator:
+    image: postgres:16-alpine
+    container_name: postgres-orchestrator
+    environment:
+      POSTGRES_DB: orchestrator
+      POSTGRES_USER: pulsepay
+      POSTGRES_PASSWORD: pulsepay
+    volumes:
+      - ./infra/init-orchestrator.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_orchestrator_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulsepay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   postgres:
     image: postgres:16-alpine
-    container_name: pulsepay-postgres
+    container_name: postgres-ledger
     environment:
-      POSTGRES_DB: pulsepay
+      POSTGRES_DB: ledger
       POSTGRES_USER: pulsepay
       POSTGRES_PASSWORD: pulsepay
     volumes:
@@ -70,7 +88,7 @@ services:
       dockerfile: Dockerfile
     container_name: pulsepay-ledger
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pulsepay
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ledger
       SPRING_DATASOURCE_USERNAME: pulsepay
       SPRING_DATASOURCE_PASSWORD: pulsepay
       SERVER_PORT: 8082
@@ -148,7 +166,7 @@ services:
       dockerfile: Dockerfile
     container_name: pulsepay-orchestrator
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pulsepay
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-orchestrator:5432/orchestrator
       SPRING_DATASOURCE_USERNAME: pulsepay
       SPRING_DATASOURCE_PASSWORD: pulsepay
       SERVER_PORT: 8080
@@ -165,7 +183,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
+      postgres-orchestrator:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -244,6 +262,7 @@ services:
         condition: service_healthy
 
 volumes:
+  postgres_orchestrator_data:
   postgres_data:
   redis_data:
 
