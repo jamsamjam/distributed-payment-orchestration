@@ -1,4 +1,4 @@
-# PulsePay — Deep Dive
+# Project Deep Dive
 
 ## 1. SAGA Pattern: Design and Trade-offs vs 2PC
 
@@ -18,14 +18,16 @@ Two-Phase Commit (2PC) is a distributed coordination protocol where a single coo
 - **Resilience**: partial failures are handled gracefully. The SAGA can be retried from any step.
 - **Heterogeneous participants**: works across any service regardless of technology stack or transport (HTTP, gRPC).
 
-### PulsePay's Choreography vs Orchestration choice
+### Choreography vs Orchestration choice
 
-We chose **orchestration** (central SAGA coordinator in `payment-orchestrator`) rather than choreography (each service reacts to events). This gives:
+I chose **orchestration** (central SAGA coordinator in `payment-orchestrator`) rather than choreography (each service reacts to events). This gives:
 - Explicit control flow visible in one place (`SagaOrchestrator.java`)
 - Easier debugging: the `saga_steps` table records every step's outcome
 - Simpler compensation: the orchestrator knows which steps completed and in what order
 
-**Trade-off**: the orchestrator is a single point of orchestration (not a single point of failure — it's stateless and can be scaled horizontally since all state is in Postgres).
+>[!Note]
+> "Wait, single point of orchestration sounds bad.."
+> Not really! This is not an in-memory state. Every step is persisted to Postgres before proceeding. If the orchestrator crashes mid-process, it simply restarts, reads from Postgres, and resumes exactly where it left off. The three instances behind the load balancer all share Postgres. No instance owns any state, so any of them can handle any request.
 
 ### Compensation design
 
