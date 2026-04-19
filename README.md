@@ -66,7 +66,7 @@ X-Api-Key: dev-api-key-12345
 | `ledger-service` | Java 21 + Spring Boot | Double-entry bookkeeping, idempotent reserve/settle |
 | `analytics-worker` | Node.js | Redis Stream consumer, rolling metrics (60s window) |
 | `notification-service` | Node.js + Fastify | Redis Stream consumer, payment notifications, audit log |
-| `provider-mock` | Node.js + Fastify | Simulated Stripe / Adyen / Braintree with failure injection |
+| `provider-mock` | Node.js + Fastify | Simulated Stripe / Adyen / PayPal with failure injection |
 
 ## Fraud Scoring
 
@@ -110,7 +110,7 @@ stateDiagram-v2
     HALF_OPEN --> OPEN: probe failure
 ```
 
-**Demo:** Click "Inject Failure" on adyen in the dashboard → watch traffic automatically reroute to braintree within 1 failed payment. Click "Recover" to restore adyen.
+**Demo:** Click "Inject Failure" on adyen in the dashboard → watch traffic automatically reroute to paypal within 1 failed payment. Click "Recover" to restore adyen.
 
 ## Idempotency
 
@@ -138,7 +138,7 @@ Tested on a single Apple M2 Pro (all services in Docker on one machine).
 
 [1] Some errors are fraud blocks; random amounts and country codes accumulate history and trigger amount-deviation signals over time. Expected on demo data (clean cards score 0).  
 [2] Spike error rate reflects connection timeouts under 500-VU burst. The routing algorithm uses weighted-random selection with a per-transaction fallback loop; saturation point is lower than a simple single-best-provider approach but resilience under partial failure is higher.  
-[3] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus fraud-block rate. After the breaker opened, traffic successfully rerouted to Adyen/Braintree.
+[3] Failure injection errors include transactions that hit Stripe in the 3-failure window before the circuit breaker tripped, plus fraud-block rate. After the breaker opened, traffic successfully rerouted to Adyen/PayPal.
 
 > [!Note]
 > **Bottleneck analysis**: Each SAGA transaction holds a DB connection while making 4 synchronous gRPC calls (fraud → reserve → route → settle, each 100-400ms). The bottleneck is DB connection pool contention. In production with:

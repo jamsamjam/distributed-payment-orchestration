@@ -30,11 +30,11 @@ const providers = {
     failureMode: null,
     stats: { total: 0, success: 0, failures: 0, totalLatency: 0 },
   },
-  braintree: {
-    name: 'braintree',
-    successRate: parseFloat(process.env.BRAINTREE_SUCCESS_RATE ?? '0.94'),
-    minLatency: parseInt(process.env.BRAINTREE_MIN_LATENCY_MS ?? '150'),
-    maxLatency: parseInt(process.env.BRAINTREE_MAX_LATENCY_MS ?? '400'),
+  paypal: {
+    name: 'paypal',
+    successRate: parseFloat(process.env.PAYPAL_SUCCESS_RATE ?? '0.94'),
+    minLatency: parseInt(process.env.PAYPAL_MIN_LATENCY_MS ?? '150'),
+    maxLatency: parseInt(process.env.PAYPAL_MAX_LATENCY_MS ?? '400'),
     cost: 0.027,
     failureMode: null,
     stats: { total: 0, success: 0, failures: 0, totalLatency: 0 },
@@ -64,7 +64,7 @@ function isProviderFailing(provider) {
 }
 
 function generateProviderTxnId(providerName) {
-  const prefix = { stripe: 'ch', adyen: 'D', braintree: 'bt' }[providerName] ?? 'tx';
+  const prefix = { stripe: 'ch', adyen: 'D', paypal: 'bt' }[providerName] ?? 'tx';
   return `${prefix}_${uuidv4().replace(/-/g, '').substring(0, 24)}`;
 }
 
@@ -174,19 +174,19 @@ app.post('/adyen/v68/payments/:pspReference/cancels', async (req, reply) => {
 });
 
 // ==============================
-// Routes — Braintree
+// Routes — PayPal
 // ==============================
 
-app.post('/braintree/v1/transactions', async (req, reply) => {
-  return handleCharge('braintree', req.body ?? {}, reply);
+app.post('/paypal/v1/transactions', async (req, reply) => {
+  return handleCharge('paypal', req.body ?? {}, reply);
 });
 
-app.post('/braintree/v1/transactions/:id/void', async (req, reply) => {
-  const latency = randomBetween(providers.braintree.minLatency, providers.braintree.maxLatency);
+app.post('/paypal/v1/transactions/:id/void', async (req, reply) => {
+  const latency = randomBetween(providers.paypal.minLatency, providers.paypal.maxLatency);
   await sleep(latency);
   return reply.code(200).send({
     success: true,
-    provider: 'braintree',
+    provider: 'paypal',
     transaction_id: req.params.id,
     status: 'VOIDED',
     latency_ms: latency,

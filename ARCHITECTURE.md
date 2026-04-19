@@ -73,7 +73,7 @@ The circuit breaker state is held in-memory per `ProviderStats` instance (one pe
 ### Routing with circuit breaker
 
 The routing algorithm only considers providers with CLOSED or HALF_OPEN state. This means:
-- When Stripe trips → traffic flows to Adyen and Braintree based on their weighted scores
+- When Stripe trips → traffic flows to Adyen and Paypal based on their weighted scores
 - The dashboard shows the circuit state change in real time via the SSE stream
 
 ---
@@ -177,6 +177,6 @@ The end-to-end path per SAGA transaction:
 
 When Stripe is injected with failures:
 1. First 3 failures → Stripe's circuit breaker opens
-2. Subsequent routing skips Stripe → traffic routes to Adyen (96% SR) and Braintree (94% SR)
+2. Subsequent routing skips Stripe → traffic routes to Adyen (96% SR) and PayPal (94% SR)
 3. Weighted blend of remaining providers: ~95% effective success rate
 4. Dashboard shows Stripe circuit state → OPEN in the provider health grid

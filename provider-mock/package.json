@@ -1,7 +1,7 @@
 {
   "name": "provider-mock",
   "version": "1.0.0",
-  "description": "Mock payment providers (Stripe, Adyen, Braintree) for PulsePay",
+  "description": "Mock payment providers (Stripe, Adyen, PayPal)",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

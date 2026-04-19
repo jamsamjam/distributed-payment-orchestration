@@ -83,7 +83,7 @@ export function handleSummary(data) {
   console.log(`Error Rate:    ${(errorRate * 100).toFixed(2)}%`);
   console.log(`Approval Rate: ${(approvalRate * 100).toFixed(2)}%`);
   console.log('');
-  console.log('Expected: approval rate >90% despite Stripe failure (rerouted to Adyen/Braintree)');
+  console.log('Expected: approval rate >90% despite Stripe failure (rerouted to Adyen/PayPal)');
 
   return {
     'loadtest/results/failure-injection.json': JSON.stringify(data, null, 2),
