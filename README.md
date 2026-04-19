@@ -7,7 +7,7 @@ A payment orchestration platform featuring multi-provider routing, rule-based fr
 
 ## Architecture
 
-[![Architecture Diagram](./docs/architecture.png)](./docs/architecture.png)
+![Architecture Diagram](./docs/architecture.png)
 
 The reasoning behind the main design choices is detailed in [ARCHITECTURE.md](./ARCHITECTURE.md). See that document for a deeper explanation of the architecture and trade-offs.
 
