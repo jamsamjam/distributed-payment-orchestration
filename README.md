@@ -3,6 +3,8 @@
 >[!Note]
 > This project was extended from a hackathon submission. The original version is available [here](https://github.com/jamsamjam/pulsepay).
 
+![Screenshot of Dashboard Page](./docs/dashboard.png)
+
 A payment orchestration platform featuring multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], and circuit breaker failover.
 
 ## Architecture
