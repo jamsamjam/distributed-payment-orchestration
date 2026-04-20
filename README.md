@@ -5,7 +5,7 @@
 
 ![Screenshot of Dashboard Page](./docs/dashboard.png)
 
-A payment orchestration platform featuring multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management[^1][^2], and circuit breaker failover.
+A payment orchestration platform featuring multi-provider routing, rule-based fraud scoring, SAGA-based distributed transaction management, and circuit breaker failover.
 
 ## Architecture
 
@@ -169,7 +169,3 @@ Key tuning parameters (via environment variables):
 **Geo signal improvement**: current geo anomaly is a binary country mismatch within 60 minutes. A real implementation would use haversine distance between coordinates and a velocity threshold (km/h) to distinguish genuine impossible travel from a US→CA hop.
 
 **Horizontal scaling**: the orchestrator is a single instance sharing a Postgres connection pool. Adding replicas requires distributed idempotency key locking (currently in-memory) to prevent duplicate processing under concurrent retries.
-
-[^1]: González-Aparicio et al. (2023) — [A transaction platform for microservices-based big data systems](https://www.sciencedirect.com/science/article/abs/pii/S1569190X22001782), *Simulation Modelling Practice and Theory*
-
-[^2]: Lemos et al. (2025) — [Local, Global, and Saga Transactions for SOA Services and Microservices](https://ieeexplore.ieee.org/document/10981749), *IEEE Access*
