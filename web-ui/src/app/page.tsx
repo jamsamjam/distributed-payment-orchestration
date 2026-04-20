@@ -78,7 +78,7 @@ function TopSummary({
           <span>{connected ? 'Realtime monitor active' : 'Reconnecting stream'}</span>
         </div>
 
-        <h1 className="hero-title">PulsePay</h1>
+        <h1 className="hero-title">DPO</h1>
 
         <div className="hero-metrics">
           <div className="hero-metric-card">

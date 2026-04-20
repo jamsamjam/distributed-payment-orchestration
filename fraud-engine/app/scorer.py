@@ -1,5 +1,5 @@
 """
-Fraud scoring engine — multi-signal risk scoring per the PulsePay spec.
+Fraud scoring engine — multi-signal risk scoring.
 """
 
 from app.models import TransactionRequest, UserHistory, FraudScore

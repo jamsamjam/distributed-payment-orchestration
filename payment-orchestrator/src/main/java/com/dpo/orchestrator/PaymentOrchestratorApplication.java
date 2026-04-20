@@ -1,4 +1,4 @@
-package com.dpo.payment_orchestrator;
+package com.dpo.orchestrator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

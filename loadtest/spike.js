@@ -1,5 +1,5 @@
 /**
- * PulsePay Load Test — Spike Test
+ * Load Test — Spike Test
  * Ramp 0→500 VUs over 30s, hold 1min, ramp down 30s
  * Target: system remains stable, approval rate stays >90%
  */

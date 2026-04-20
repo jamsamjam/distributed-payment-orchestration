@@ -8,8 +8,8 @@ const pino = require('pino');
 const log = pino({ level: 'info' });
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
-const DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://pulsepay:pulsepay@localhost:5435/notification';
-const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'pulsepay:events';
+const DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://dpo:dpo@localhost:5435/notification';
+const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'dpo:events';
 const STREAM_GROUP = 'notifications';
 const CONSUMER_NAME = `notification-${process.pid}`;
 const PORT = parseInt(process.env.PORT ?? '3001');

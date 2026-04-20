@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
     await redis_client.aclose()
 
 
-app = FastAPI(title="PulsePay Fraud Engine", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Fraud Engine", version="1.0.0", lifespan=lifespan)
 
 
 @app.exception_handler(RequestValidationError)

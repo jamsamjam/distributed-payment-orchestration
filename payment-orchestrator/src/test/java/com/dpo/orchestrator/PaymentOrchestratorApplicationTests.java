@@ -1,4 +1,4 @@
-package com.dpo.payment_orchestrator;
+package com.dpo.orchestrator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

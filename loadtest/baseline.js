@@ -1,5 +1,5 @@
 /**
- * PulsePay Load Test — Baseline
+ * Load Test — Baseline
  * 50 VUs, steady state for 2 minutes
  * Target: >200 TPS, P95 <200ms, <1% error rate
  */

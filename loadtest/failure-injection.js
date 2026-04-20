@@ -1,5 +1,5 @@
 /**
- * PulsePay Load Test — Failure Injection
+ * Load Test — Failure Injection
  * 50 VUs steady, inject provider failure at t=30s
  * Assert: approval rate stays >90% (traffic reroutes), circuit breaker trips within 3 failures
  */

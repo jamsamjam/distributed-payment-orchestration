@@ -1,4 +1,4 @@
-package com.dpo.provider_router;
+package com.dpo.router;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

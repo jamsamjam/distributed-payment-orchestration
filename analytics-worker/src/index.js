@@ -7,12 +7,12 @@ const { RollingMetrics } = require('./metrics');
 const log = pino({ level: 'info' });
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
-const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'pulsepay:events';
+const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'dpo:events';
 const STREAM_GROUP = 'analytics';
 const CONSUMER_NAME = `analytics-${process.pid}`;
 const WINDOW_SECONDS = parseInt(process.env.METRICS_WINDOW_SECONDS ?? '60');
 const PUBLISH_INTERVAL_MS = parseInt(process.env.METRICS_PUBLISH_INTERVAL_MS ?? '5000');
-const METRICS_HASH_KEY = 'pulsepay:metrics';
+const METRICS_HASH_KEY = 'dpo:metrics';
 
 const redis = new Redis(REDIS_URL, { lazyConnect: true });
 const streamRedis = new Redis(REDIS_URL, { lazyConnect: true });
@@ -104,7 +104,7 @@ async function publishMetrics() {
 
       // Also push the snapshot to a stream for SSE publishing
       await redis.xadd(
-        'pulsepay:metrics-snapshots',
+        'dpo:metrics-snapshots',
         'MAXLEN', '~', '100',
         '*',
         'data', JSON.stringify({ type: 'METRICS_SNAPSHOT', timestamp: new Date(ts).toISOString(), payload: snapshot })

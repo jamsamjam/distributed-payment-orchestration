@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PulsePay | Payments Command Center',
+  title: 'Payments Command Center',
   description: 'Live payment operations dashboard',
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "analytics-worker",
   "version": "1.0.0",
-  "description": "PulsePay analytics worker — Redis Streams consumer + rolling metrics",
+  "description": "Analytics worker — Redis Streams consumer + rolling metrics",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

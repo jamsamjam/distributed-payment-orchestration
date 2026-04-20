@@ -16,7 +16,7 @@ const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const API_KEY = process.env.API_KEY ?? 'dev-api-key-12345';
 const MAX_TOKENS = parseInt(process.env.RATE_LIMIT_MAX_TOKENS ?? '100');
 const REFILL_RATE = parseInt(process.env.RATE_LIMIT_REFILL_RATE ?? '100');
-const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'pulsepay:events';
+const STREAM_KEY = process.env.EVENTS_STREAM_KEY ?? 'dpo:events';
 const STREAM_GROUP = 'gateway-sse';
 const CONSUMER_NAME = `gateway-${process.pid}`;
 
@@ -248,7 +248,7 @@ async function initStreamConsumer() {
 async function pollStream() {
   // Also subscribe to metrics snapshots stream
   try {
-    await subRedis.xgroup('CREATE', 'pulsepay:metrics-snapshots', STREAM_GROUP, '$', 'MKSTREAM');
+    await subRedis.xgroup('CREATE', 'dpo:metrics-snapshots', STREAM_GROUP, '$', 'MKSTREAM');
   } catch (err) {
     if (!err.message.includes('BUSYGROUP')) app.log.warn('metrics xgroup: %s', err.message);
   }
@@ -259,7 +259,7 @@ async function pollStream() {
         'GROUP', STREAM_GROUP, CONSUMER_NAME,
         'COUNT', '50',
         'BLOCK', '500',
-        'STREAMS', STREAM_KEY, 'pulsepay:metrics-snapshots', '>', '>'
+        'STREAMS', STREAM_KEY, 'dpo:metrics-snapshots', '>', '>'
       );
 
       if (results) {
