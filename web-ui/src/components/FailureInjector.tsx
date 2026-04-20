@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-const PROVIDERS = ['stripe', 'adyen', 'braintree']
+const PROVIDERS = ['stripe', 'adyen', 'paypal']
 const DURATIONS = ['10s', '30s', '60s', '2m']
 
 export default function FailureInjector() {

@@ -36,7 +36,7 @@ function CircuitBadge({ state }: { state: string }) {
   )
 }
 
-const PROVIDERS = ['stripe', 'adyen', 'braintree']
+const PROVIDERS = ['stripe', 'adyen', 'paypal']
 
 export default function ProviderHealthGrid({ health }: Props) {
   return (

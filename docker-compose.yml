@@ -7,15 +7,15 @@ services:
     container_name: postgres-orchestrator
     environment:
       POSTGRES_DB: orchestrator
-      POSTGRES_USER: pulsepay
-      POSTGRES_PASSWORD: pulsepay
+      POSTGRES_USER: dpo
+      POSTGRES_PASSWORD: dpo
     volumes:
       - ./infra/init-orchestrator.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_orchestrator_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pulsepay"]
+      test: ["CMD-SHELL", "pg_isready -U v"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -25,15 +25,15 @@ services:
     container_name: postgres-notification
     environment:
       POSTGRES_DB: notification
-      POSTGRES_USER: pulsepay
-      POSTGRES_PASSWORD: pulsepay
+      POSTGRES_USER: dpo
+      POSTGRES_PASSWORD: dpo
     volumes:
       - ./infra/init-notification.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_notification_data:/var/lib/postgresql/data
     ports:
       - "5435:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pulsepay"]
+      test: ["CMD-SHELL", "pg_isready -U dpo"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -43,15 +43,15 @@ services:
     container_name: postgres-ledger
     environment:
       POSTGRES_DB: ledger
-      POSTGRES_USER: pulsepay
-      POSTGRES_PASSWORD: pulsepay
+      POSTGRES_USER: dpo
+      POSTGRES_PASSWORD: dpo
     volumes:
       - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pulsepay"]
+      test: ["CMD-SHELL", "pg_isready -U dpo"]
       interval: 5s
       timeout: 5s
       retries: 10

@@ -130,7 +130,7 @@ This naming ensures compensating transactions cannot accidentally re-execute for
 
 ## 5. Event Sourcing Rationale
 
-Every state transition in the payment lifecycle publishes a domain event to Redis Streams (`pulsepay:events`). This provides:
+Every state transition in the payment lifecycle publishes a domain event to Redis Streams (`dpo:events`). This provides:
 
 **Decoupling**: the analytics worker and the SSE gateway both consume the same stream independently via consumer groups. Adding a new consumer (e.g., a compliance audit worker) requires zero changes to the orchestrator.
 
