@@ -2,7 +2,6 @@ package com.dpo.orchestrator.event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.dpo.orchestrator.model.Transaction;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -14,15 +13,18 @@ import java.util.Map;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class DomainEventPublisher {
 
-    @Value("${redis.stream.events-key:dpo:events}")
+    @Value("${app.redis.stream-key:dpo:events}")
     private String streamKey;
 
     private final StringRedisTemplate redisTemplate;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public DomainEventPublisher(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     public void publish(String eventType, Transaction txn, Map<String, Object> extraPayload) {
         try {

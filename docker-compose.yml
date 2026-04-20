@@ -15,7 +15,7 @@ services:
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U v"]
+      test: ["CMD-SHELL", "pg_isready -U dpo -d orchestrator"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -33,7 +33,7 @@ services:
     ports:
       - "5435:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dpo"]
+      test: ["CMD-SHELL", "pg_isready -U dpo -d notification"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -51,14 +51,14 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dpo"]
+      test: ["CMD-SHELL", "pg_isready -U dpo -d ledger"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: pulsepay-redis
+    container_name: dpo-redis
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -77,7 +77,7 @@ services:
     build:
       context: ./provider-mock
       dockerfile: Dockerfile
-    container_name: pulsepay-provider-mock
+    container_name: dpo-provider-mock
     environment:
       PORT: 9000
       STRIPE_SUCCESS_RATE: 0.98
@@ -104,11 +104,11 @@ services:
     build:
       context: ./ledger-service
       dockerfile: Dockerfile
-    container_name: pulsepay-ledger
+    container_name: dpo-ledger
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ledger
-      SPRING_DATASOURCE_USERNAME: pulsepay
-      SPRING_DATASOURCE_PASSWORD: pulsepay
+      SPRING_DATASOURCE_USERNAME: dpo
+      SPRING_DATASOURCE_PASSWORD: dpo
       SERVER_PORT: 8082
       GRPC_PORT: 50052
     ports:
@@ -130,7 +130,7 @@ services:
     build:
       context: ./fraud-engine
       dockerfile: Dockerfile
-    container_name: pulsepay-fraud
+    container_name: dpo-fraud
     environment:
       PORT: 8000
       REDIS_URL: redis://redis:6379
@@ -154,7 +154,7 @@ services:
     build:
       context: ./provider-router
       dockerfile: Dockerfile
-    container_name: pulsepay-router
+    container_name: dpo-router
     environment:
       SERVER_PORT: 8081
       PROVIDER_MOCK_URL: http://provider-mock:9000
@@ -182,11 +182,11 @@ services:
     build:
       context: ./payment-orchestrator
       dockerfile: Dockerfile
-    container_name: pulsepay-orchestrator
+    container_name: dpo-orchestrator
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-orchestrator:5432/orchestrator
-      SPRING_DATASOURCE_USERNAME: pulsepay
-      SPRING_DATASOURCE_PASSWORD: pulsepay
+      SPRING_DATASOURCE_USERNAME: dpo
+      SPRING_DATASOURCE_PASSWORD: dpo
       SERVER_PORT: 8080
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -224,7 +224,7 @@ services:
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
-    container_name: pulsepay-gateway
+    container_name: dpo-gateway
     environment:
       PORT: 3000
       ORCHESTRATOR_URL: http://payment-orchestrator:8080
@@ -252,7 +252,7 @@ services:
     build:
       context: ./analytics-worker
       dockerfile: Dockerfile
-    container_name: pulsepay-analytics
+    container_name: dpo-analytics
     environment:
       REDIS_URL: redis://redis:6379
       METRICS_WINDOW_SECONDS: 60
@@ -268,11 +268,11 @@ services:
     build:
       context: ./notification-service
       dockerfile: Dockerfile
-    container_name: pulsepay-notification
+    container_name: dpo-notification
     environment:
       PORT: 3001
       REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgresql://pulsepay:pulsepay@postgres-notification:5432/notification
+      DATABASE_URL: postgresql://dpo:dpo@postgres-notification:5432/notification
     ports:
       - "3001:3001"
     depends_on:
@@ -293,7 +293,7 @@ services:
     build:
       context: ./web-ui
       dockerfile: Dockerfile
-    container_name: pulsepay-web
+    container_name: dpo-web
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3000
       NEXT_PUBLIC_SSE_URL: http://localhost:3000/stream/transactions
@@ -312,4 +312,4 @@ volumes:
 
 networks:
   default:
-    name: pulsepay-network
+    name: dpo-network
