@@ -40,4 +40,8 @@ public class Account {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 }

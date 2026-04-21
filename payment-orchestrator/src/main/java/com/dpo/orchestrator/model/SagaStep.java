@@ -33,6 +33,10 @@ public class SagaStep {
     @Column(name = "error_message")
     private String errorMessage;
 
+    @Builder.Default
+    @Column(name = "attempt", nullable = false)
+    private Integer attempt = 0;
+
     @CreationTimestamp
     @Column(name = "executed_at", updatable = false)
     private Instant executedAt;

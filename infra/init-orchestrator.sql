@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS saga_steps (
   step VARCHAR(32) NOT NULL,
   status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
   error_message TEXT,
+  attempt INTEGER NOT NULL DEFAULT 0,
   executed_at TIMESTAMPTZ DEFAULT NOW()
 );
 

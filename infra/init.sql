@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   reserved DECIMAL(12,2) NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
+  version BIGINT NOT NULL DEFAULT 0,
   CONSTRAINT positive_balance CHECK (balance >= 0),
   CONSTRAINT positive_reserved CHECK (reserved >= 0)
 );
