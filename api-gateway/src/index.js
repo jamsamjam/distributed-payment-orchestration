@@ -242,17 +242,16 @@ async function initStreamConsumer() {
     }
   }
 
-  pollStream();
-}
-
-async function pollStream() {
-  // Also subscribe to metrics snapshots stream
   try {
-    await subRedis.xgroup('CREATE', 'dpo:metrics-snapshots', STREAM_GROUP, '$', 'MKSTREAM');
+    await subRedis.xgroup('CREATE', 'dpo:metrics-snapshots', STREAM_GROUP, '0', 'MKSTREAM');
   } catch (err) {
     if (!err.message.includes('BUSYGROUP')) app.log.warn('metrics xgroup: %s', err.message);
   }
 
+  pollStream();
+}
+
+async function pollStream() {
   while (true) {
     try {
       const results = await subRedis.xreadgroup(
@@ -263,17 +262,16 @@ async function pollStream() {
       );
 
       if (results) {
-        for (const [, messages] of results) {
+        for (const [streamKey, messages] of results) {
           for (const [id, fields] of messages) {
             const dataIdx = fields.indexOf('data');
             if (dataIdx !== -1 && fields[dataIdx + 1]) {
-              // TODO: use correct stream key per message
               try {
                 const event = JSON.parse(fields[dataIdx + 1]);
                 sseManager.broadcast(event);
               } catch {}
             }
-            await subRedis.xack(STREAM_KEY, STREAM_GROUP, id);
+            await subRedis.xack(streamKey, STREAM_GROUP, id);
           }
         }
       }
