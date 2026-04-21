@@ -19,18 +19,6 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-  grpc:
-    client:
-      channels:
-        fraud-engine:
-          address: ${FRAUD_ENGINE_HOST:localhost}:${FRAUD_ENGINE_GRPC_PORT:50051}
-          negotiation-type: plaintext
-        ledger-service:
-          address: ${LEDGER_HOST:localhost}:${LEDGER_GRPC_PORT:50052}
-          negotiation-type: plaintext
-        provider-router:
-          address: ${PROVIDER_ROUTER_HOST:localhost}:${PROVIDER_ROUTER_GRPC_PORT:50053}
-          negotiation-type: plaintext
 
 server:
   port: ${SERVER_PORT:8080}
