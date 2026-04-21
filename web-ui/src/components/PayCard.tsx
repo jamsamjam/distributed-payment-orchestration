@@ -221,25 +221,6 @@ export default function PayCard() {
           </div>
         </div>
       </div>
-
-      {result && (
-        <div className="mono" style={{
-          padding: '10px 12px',
-          borderRadius: '12px',
-          background: 'rgba(255,255,255,0.75)',
-          border: '1px solid var(--border)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          fontSize: '12px',
-        }}>
-          <span style={{ color: statusColor(result.status), fontWeight: 700 }}>{result.status}</span>
-          {result.fraudScore !== undefined && (
-            <span style={{ color: 'var(--text-2)' }}>score: {result.fraudScore} · {result.fraudDecision}</span>
-          )}
-          {result.errorMessage && <span style={{ color: 'var(--err)' }}>{result.errorMessage}</span>}
-        </div>
-      )}
     </div>
   )
 }

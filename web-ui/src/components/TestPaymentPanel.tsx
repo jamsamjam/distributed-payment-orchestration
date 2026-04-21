@@ -217,32 +217,6 @@ export default function TestPaymentPanel() {
                   {isLoading ? 'Sending...' : 'Run'}
                 </button>
               </div>
-
-              {result && (
-                <div
-                  className="mono"
-                  style={{
-                    marginTop: '12px',
-                    padding: '10px 12px',
-                    borderRadius: '14px',
-                    background: 'rgba(255,255,255,0.75)',
-                    border: '1px solid var(--border)',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    fontSize: '12px',
-                  }}
-                >
-                  <span style={{ color: statusColor(result.status), fontWeight: 700 }}>{result.status}</span>
-                  {result.fraudScore !== undefined && (
-                    <span style={{ color: 'var(--text-2)' }}>
-                      score:{result.fraudScore} {result.fraudDecision}
-                    </span>
-                  )}
-                  {result.provider && <span style={{ color: 'var(--text-2)' }}>provider:{result.provider}</span>}
-                  {result.errorMessage && <span style={{ color: 'var(--err)' }}>{result.errorMessage}</span>}
-                </div>
-              )}
             </div>
           )
         })}
