@@ -21,7 +21,7 @@ class FraudServicer(fraud_pb2_grpc.FraudServiceServicer):
 
         txn_req = TransactionRequest(
             transaction_id=request.transaction_id,
-            amount=request.amount,
+            amount=request.amount_cents,
             currency=request.currency,
             merchant_id=request.merchant_id,
             card_last4=request.card_last4,
